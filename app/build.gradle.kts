@@ -43,6 +43,10 @@ dependencies {
 
 
 
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
+
     ksp("androidx.room:room-compiler:2.8.4")
     implementation("androidx.room:room-runtime:2.8.4")
     implementation("androidx.room:room-ktx:2.8.4")
