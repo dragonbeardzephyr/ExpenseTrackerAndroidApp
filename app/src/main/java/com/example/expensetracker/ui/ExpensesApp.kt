@@ -1,9 +1,17 @@
 package com.example.expensetracker.ui
 
 import androidx.compose.foundation.layout.padding
+
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.* // Pulls in Home, List, etc.
-import androidx.compose.material3.* // Pulls in NavigationBar, NavigationBarItem, Icon, Text, Scaffold
+import androidx.compose.material.icons.automirrored.filled.MultilineChart
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+
 import androidx.compose.runtime.* // REQUIRED for 'by' and 'getValue' logic
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -22,9 +30,9 @@ enum class Screens(
 ) {
     Home("Home", Icons.Default.Home),
     Accounts("Accounts", Icons.Default.AccountBalance),
-    Transactions("History", Icons.Default.List),
-    Splitter("Split", Icons.Default.CallSplit),
-    Expenses("Budget", Icons.Default.PieChart),
+    Transactions("History", Icons.AutoMirrored.Filled.ViewList),
+    Splitter("Split", Icons.Default.Add),
+    Expenses("Budget", Icons.AutoMirrored.Filled.MultilineChart),
     Settings("Settings", Icons.Default.Settings)
 }
 
@@ -58,42 +66,38 @@ fun ExpensesApp() {
                         icon = {
                             Icon(
                                 imageVector = screen.icon,
-                                contentDescription = null
+                                contentDescription = screen.label
                             )
                         },
                         label = { Text(screen.label) }
                     )
                 }
             }
-        }) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = Screens.Home.name,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(route = Screens.Home.name) {
-                    HomeScreen(viewModel, navController)
-                }
-                composable(route = Screens.Accounts.name) {
-                    AccountsScreen(viewModel, navController)
-                }
-                composable(route = Screens.Transactions.name) {
-                    TransactionsScreen(viewModel, navController)
-                }
-                composable(route = Screens.Splitter.name) {
-                    SplitterScreen(viewModel, navController)
-                }
-                composable(route = Screens.Expenses.name) {
-                    // You called it Spending/Budget - create this file in ui/screens
-                    ExpensesScreen(viewModel, navController)
-                }
-                composable(route = Screens.Settings.name) {
-                    SettingsScreen(viewModel, navController)
-                }
-
+        })
+    { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screens.Home.name,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(route = Screens.Home.name) {
+                HomeScreen(viewModel, navController)
             }
-
+            composable(route = Screens.Accounts.name) {
+                AccountsScreen(viewModel, navController)
+            }
+            composable(route = Screens.Transactions.name) {
+                TransactionsScreen(viewModel, navController)
+            }
+            composable(route = Screens.Splitter.name) {
+                SplitterScreen(viewModel, navController)
+            }
+            composable(route = Screens.Expenses.name) {
+                ExpensesScreen(viewModel, navController)
+            }
+            composable(route = Screens.Settings.name) {
+                SettingsScreen(viewModel, navController)
+            }
         }
-
+    }
 }
-
