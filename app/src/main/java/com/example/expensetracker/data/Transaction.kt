@@ -3,6 +3,7 @@ package com.example.expensetracker.data
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import java.time.LocalDateTime
 
 @Entity(
     tableName = "transactions",
@@ -21,7 +22,7 @@ data class Transaction(
     val account_id:String,
     val amount:Double,
     val transaction_code:String,
-    val date:String,
+    val date: LocalDateTime,
     val merchant_name:String,
     val name:String,
     val is_excluded:Boolean,

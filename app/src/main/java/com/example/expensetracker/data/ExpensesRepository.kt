@@ -13,6 +13,21 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
         return expensesDao.getAccounts()
     }
 
+    // Net Worth
+
+    suspend fun insertNetWorth(netWorth: NetWorth) {
+        expensesDao.insertNetWorth(netWorth)
+    }
+
+    fun getNetWorth(date: String): LiveData<NetWorth> {
+        return expensesDao.getNetWorth(date)
+    }
+
+    fun getAllNetWorth(): LiveData<List<NetWorth>> {
+        return expensesDao.getAllNetWorth()
+    }
+
+
     // Transactions
 
     suspend fun insertTransaction(transaction: Transaction) {
@@ -22,7 +37,6 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
     fun getAllTransactions(): LiveData<List<Transaction>> {
         return expensesDao.getAllTransactions()
     }
-
 
     fun getTransactionsByAccount(accId: String): LiveData<List<Transaction>> {
         return expensesDao.getTransactionsByAccount(accId)

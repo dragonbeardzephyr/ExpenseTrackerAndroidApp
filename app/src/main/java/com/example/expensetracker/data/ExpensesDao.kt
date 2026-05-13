@@ -5,11 +5,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Insert
 
 import androidx.room.Query
+import java.time.LocalDate
 
 @Dao
 interface ExpensesDao {
     // Account
-
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE) // do we want to ignore or replace?
@@ -17,6 +17,19 @@ interface ExpensesDao {
 
     @Query("SELECT * FROM accounts")
     fun getAccounts(): LiveData<List<Account>>
+
+
+    // Net Worth
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNetWorth(netWorth: NetWorth)
+
+    @Query("SELECT * FROM net_worth ORDER BY date DESC LIMIT 1")
+    fun getNetWorth(date: String): LiveData<NetWorth>
+
+    @Query("SELECT * FROM net_worth") // for line chart
+    fun getAllNetWorth(): LiveData<List<NetWorth>>
+
 
     // Transactions
 
