@@ -32,9 +32,12 @@ fun AccountsScreen(
 ) {
 
     val allAccounts = listOf(
-        Account(account_id = "1", available_balance = 100.0, current_balance = 100.0, currency_code = "USD", name = "Checking", type = "Checking", mask = "1234"),
-        Account(account_id = "2", available_balance = 123.0, current_balance = 125.0, currency_code = "USD", name = "Savings", type = "Savings", mask = "1234")
+        Account(account_id = "1", available_balance = 100.0, current_balance = 100.0, currency_code = "GBP", name = "Checking", type = "Checking", mask = "1234"),
+        Account(account_id = "2", available_balance = 123.0, current_balance = 125.0, currency_code = "GBP", name = "Savings", type = "Savings", mask = "1235")
     )
+    val netWorth = 225
+
+    // here we should also pull some aggregate data of net worth over previous months, to form a line chart
 
 
     Scaffold(
@@ -80,10 +83,7 @@ fun AccountsScreen(
             {
                 item() {
                     Row() {
-                        var netWorth = 0.0
-                        for (account in allAccounts) {
-                            netWorth = netWorth + account.current_balance
-                        }
+
                         Text(text = "Net Worth")
                         Text(text = "£$netWorth")
                     }

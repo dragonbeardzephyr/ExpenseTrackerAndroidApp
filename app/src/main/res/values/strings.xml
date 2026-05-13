@@ -1,6 +1,3 @@
 <resources>
-    <string name="app_name">lab5</string>
-    <string name="welcome_msg">Welcome to weather dummy app :-)</string>
-    <string name="enter_a_location">Enter a location</string>
-    <string name="refresh">Refresh</string>
+    <string name="app_name">Expense Tracker</string>
 </resources>

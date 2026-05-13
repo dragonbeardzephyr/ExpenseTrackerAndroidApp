@@ -5,7 +5,6 @@ import androidx.room.PrimaryKey
 
 @Entity
 data class NetWorth(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val date: String, // YYYY-MM-DD
+    @PrimaryKey(autoGenerate = true) val date: String, // YYYY-MM-DD, do an on replace thing here, if you sync more than once a day
     val amount: Double
 )

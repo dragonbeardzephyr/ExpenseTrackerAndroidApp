@@ -37,10 +37,11 @@ fun HomeScreen(
     navController: NavHostController
 ) {
 
-    val allAccounts = listOf(
+    val allAccounts = listOf( // pulled from db
         Account(account_id = "1", available_balance = 100.0, current_balance = 100.0, currency_code = "USD", name = "Checking", type = "Checking", mask = "1234"),
         Account(account_id = "2", available_balance = 123.0, current_balance = 125.0, currency_code = "USD", name = "Savings", type = "Savings", mask = "1234")
     )
+    val netWorth = 225.0 //pulled from db
 
     Scaffold(
         modifier = Modifier,
@@ -83,7 +84,7 @@ fun HomeScreen(
                 }
             }
 
-            AccountsList(allAccounts)
+            AccountsList(allAccounts, netWorth)
 
             Text("Monthly Stats")
             Row() {
@@ -113,7 +114,8 @@ fun HomeScreen(
 
 @Composable
 fun AccountsList(
-    accounts:List<Account>
+    accounts:List<Account>,
+    netWorth:Double
 ) {
     LazyRow() {
 
