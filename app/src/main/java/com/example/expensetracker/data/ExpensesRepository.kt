@@ -13,14 +13,22 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
         return expensesDao.getAccounts()
     }
 
+    suspend fun getAccountsStatic(): List<Account> {
+        return expensesDao.getAccountsStatic()
+    }
+
+    suspend fun getAccountByIdStatic(accId: String): Account? {
+        return expensesDao.getAccountByIdStatic(accId)
+    }
+
     // Net Worth
 
     suspend fun insertNetWorth(netWorth: NetWorth) {
         expensesDao.insertNetWorth(netWorth)
     }
 
-    fun getNetWorth(date: String): LiveData<NetWorth> {
-        return expensesDao.getNetWorth(date)
+    fun getNetWorth(): LiveData<NetWorth> {
+        return expensesDao.getNetWorth()
     }
 
     fun getAllNetWorth(): LiveData<List<NetWorth>> {
@@ -43,12 +51,25 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
     }
 
 
+
     // Split Transactions
 
-    suspend fun insertSplitTransactions(split: SplitTransaction) {
+    suspend fun insertSplitTransaction(split: SplitTransaction) {
         expensesDao.insertSplitTransaction(split)
         expensesDao.updateSplitStatus(split.parent_id, true)
     }
+
+
+    suspend fun deleteSplitTransaction(splitId: Int, parentId: String) {
+        expensesDao.deleteSplitTransaction(splitId)
+
+        val remainingSplits = expensesDao.getSplitCount(parentId)
+
+        if (remainingSplits == 0) {
+            expensesDao.updateSplitStatus(parentId, false)
+        }
+    }
+
 
     fun getSplitTransactionsByTransaction(transactionId: String): LiveData<List<SplitTransaction>> {
         return expensesDao.getSplitTransactionsByTransaction(transactionId)

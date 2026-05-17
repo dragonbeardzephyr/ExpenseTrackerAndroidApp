@@ -1,5 +1,6 @@
 package com.example.expensetracker.data
 
+import androidx.lifecycle.LiveData
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.time.LocalDate

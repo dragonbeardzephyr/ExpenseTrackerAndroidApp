@@ -10,6 +10,7 @@ data class Account(
     val current_balance:Double,
     val currency_code:String,
     val name:String,
+    val bankName:String,
     val type:String,
     val mask:String
 )

@@ -2,11 +2,13 @@ package com.example.expensetracker.data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 
 @Entity(
     tableName = "transactions",
+    indices = [Index(value = ["account_id"])],
     foreignKeys = [
         ForeignKey(
             entity = Account::class,

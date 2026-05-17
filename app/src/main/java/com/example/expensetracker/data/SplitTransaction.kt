@@ -2,10 +2,12 @@ package com.example.expensetracker.data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
     tableName = "split_transactions",
+    indices = [Index(value = ["parent_id"])],
     foreignKeys = [
         ForeignKey(
             entity = Transaction::class,
@@ -21,7 +23,7 @@ data class SplitTransaction(
     val parent_id: String,
     val amount: Double,
     val name: String,
-    val is_exlcuded: Boolean,
+    val is_excluded: Boolean,
     val cat_primary: String?,
     val cat_detailed: String?
 )

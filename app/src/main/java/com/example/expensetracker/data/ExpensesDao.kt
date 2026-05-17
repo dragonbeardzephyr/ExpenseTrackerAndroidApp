@@ -5,6 +5,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Insert
 
 import androidx.room.Query
+import androidx.room.Update
+import androidx.room.Upsert
+
 import java.time.LocalDate
 
 @Dao
@@ -12,11 +15,17 @@ interface ExpensesDao {
     // Account
 
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE) // do we want to ignore or replace?
+    @Upsert() // do we want to ignore or replace?
     suspend fun insertAccount(account: Account)
 
     @Query("SELECT * FROM accounts")
     fun getAccounts(): LiveData<List<Account>>
+
+    @Query("SELECT * FROM accounts")
+    suspend fun getAccountsStatic(): List<Account>
+
+    @Query("SELECT * FROM accounts WHERE account_id = :accId LIMIT 1")
+    suspend fun getAccountByIdStatic(accId: String): Account?
 
 
     // Net Worth
@@ -25,7 +34,7 @@ interface ExpensesDao {
     suspend fun insertNetWorth(netWorth: NetWorth)
 
     @Query("SELECT * FROM net_worth ORDER BY date DESC LIMIT 1")
-    fun getNetWorth(date: String): LiveData<NetWorth>
+    fun getNetWorth(): LiveData<NetWorth>
 
     @Query("SELECT * FROM net_worth") // for line chart
     fun getAllNetWorth(): LiveData<List<NetWorth>>
@@ -43,14 +52,28 @@ interface ExpensesDao {
     fun getTransactionsByAccount(accId: String): LiveData<List<Transaction>>
 
 
+
+
+
     // Split Transactions
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert()
     suspend fun insertSplitTransaction(split: SplitTransaction)
+
+    @Query("DELETE FROM split_transactions WHERE split_id = :splitId")
+    suspend fun deleteSplitTransaction(splitId: Int)
+
 
     @Query("SELECT * FROM split_transactions WHERE parent_id = :transactionId")
     fun getSplitTransactionsByTransaction(transactionId: String): LiveData<List<SplitTransaction>>
 
     @Query("UPDATE transactions SET is_split = :isSplit WHERE transaction_id = :transactionId")
     suspend fun updateSplitStatus(transactionId: String, isSplit: Boolean)
+
+    @Query("SELECT COUNT(*) FROM split_transactions WHERE parent_id = :transactionId")
+    suspend fun getSplitCount(transactionId: String): Int
+
+
+
+
 }

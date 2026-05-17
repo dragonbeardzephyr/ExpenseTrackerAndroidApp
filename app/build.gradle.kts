@@ -31,11 +31,11 @@ android {
     }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
     buildFeatures {
         viewBinding = true
@@ -45,7 +45,11 @@ android {
 
 dependencies {
 
-    implementation("com.plaid.link:sdk-core:6.0.0")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
+
+    implementation("com.plaid.link:sdk-core:5.5.1")
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 

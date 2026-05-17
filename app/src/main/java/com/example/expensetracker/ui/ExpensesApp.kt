@@ -37,7 +37,7 @@ enum class Screens(
 }
 
 @Composable
-fun ExpensesApp() {
+fun ExpensesApp(onAddAccountClick: () -> Unit) {
 
     val viewModel: ExpensesViewModel = viewModel()
     val navController: NavHostController = rememberNavController()
@@ -84,13 +84,14 @@ fun ExpensesApp() {
                 HomeScreen(viewModel, navController)
             }
             composable(route = Screens.Accounts.name) {
-                AccountsScreen(viewModel, navController)
+                AccountsScreen(viewModel, navController, onAddAccountClick)
             }
             composable(route = Screens.Transactions.name) {
                 TransactionsScreen(viewModel, navController)
             }
-            composable(route = Screens.Splitter.name) {
-                SplitterScreen(viewModel, navController)
+            composable(route = Screens.Splitter.name + "/{transactionId}") { backStackEntry ->
+                val transactionId = backStackEntry.arguments?.getString("transactionId")
+                SplitterScreen(viewModel, navController, transactionId)
             }
             composable(route = Screens.Expenses.name) {
                 ExpensesScreen(viewModel, navController)

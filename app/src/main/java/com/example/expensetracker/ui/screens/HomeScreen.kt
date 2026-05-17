@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,12 +21,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.expensetracker.data.Account
+import com.example.expensetracker.data.NetWorth
 import com.example.expensetracker.ui.ExpensesViewModel
 import com.example.expensetracker.ui.Screens
 
@@ -37,11 +41,12 @@ fun HomeScreen(
     navController: NavHostController
 ) {
 
-    val allAccounts = listOf( // pulled from db
-        Account(account_id = "1", available_balance = 100.0, current_balance = 100.0, currency_code = "USD", name = "Checking", type = "Checking", mask = "1234"),
-        Account(account_id = "2", available_balance = 123.0, current_balance = 125.0, currency_code = "USD", name = "Savings", type = "Savings", mask = "1234")
-    )
-    val netWorth = 225.0 //pulled from db
+
+    val allAccounts by viewModel.accounts.observeAsState(initial = emptyList())
+    //val netWorth by viewModel.netWorth.observeAsState(initial = null)
+    val totalBalance by viewModel.derivedNetWorth.observeAsState(initial = 0.0)
+
+
 
     Scaffold(
         modifier = Modifier,
@@ -84,24 +89,23 @@ fun HomeScreen(
                 }
             }
 
-            AccountsList(allAccounts, netWorth)
+            AccountsList(allAccounts, totalBalance)
 
             Text("Monthly Stats")
-            Row() {
-                Box(
-                ) { //Spending  Box
+            Row {
+                Box { //Spending  Box
                     Text(text = "Spending")
                 }
-                Box() { // Budget Box
+                Box { // Budget Box
                     Text(text = "Budget")
                 }
             }
 
-            Row() {
-                Box() { // ?? Box
+            Row {
+                Box { // ?? Box
                     Text(text = "Unknown")
                 }
-                Box() { // ?? Box
+                Box { // ?? Box
                     Text(text = "Unknown")
                 }
             }
@@ -115,27 +119,30 @@ fun HomeScreen(
 @Composable
 fun AccountsList(
     accounts:List<Account>,
-    netWorth:Double
+    netWorth: Double
 ) {
-    LazyRow() {
+    LazyRow {
 
-        item() {
-            Column {
-                var netWorth = 0.0
-                for (account in accounts) {
-                    netWorth = netWorth + account.current_balance
-                }
-                Text(text = "£$netWorth")
+        item {
+            Card {
+                Text(text = netWorth.toString() ?: "0.0")
                 Text(text = "Net Worth")
             }
         }
 
         items(accounts.size) { index ->
-            Column() {
-                Text(text = "£" + accounts[index].current_balance.toString())
-                Text(text = accounts[index].name)
-            }
+            AccountBox(accounts[index])
         }
 
+    }
+}
+
+
+@Composable
+fun AccountBox(account: Account) {
+    Card {
+        Text(text = "£" + account.current_balance.toString())
+        Text(text = account.name)
+        Text(text = account.bankName)
     }
 }

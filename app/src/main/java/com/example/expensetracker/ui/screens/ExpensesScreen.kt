@@ -94,7 +94,7 @@ fun CategoryList(mode: Int, categories: List<String>) {
 
     Text(text = "Hello from Category List")
 
-    LazyColumn() {
+    LazyColumn {
 
         items(categories) {category ->
             Text(text = category)
