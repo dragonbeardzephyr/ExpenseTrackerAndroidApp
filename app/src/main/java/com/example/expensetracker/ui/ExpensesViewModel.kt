@@ -58,9 +58,9 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
     }
 
 
-    val currentMonth: String = LocalDate.now().monthValue.toString() // YYYY-MM?
+    var selectedMonth: String = java.time.YearMonth.now().toString()
 
-    val currentBudgets: LiveData<List<Budget>> = expensesRepository.getBudgetsForMonth(currentMonth)
+    val budgetsForMonth: LiveData<List<Budget>> = expensesRepository.getBudgetsForMonth(selectedMonth)
 
 
     val clientUserId = "user_id"
@@ -424,14 +424,8 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
     }
 
 
-    fun saveBudget(catId: Int, limitAmount: Double) {
+    fun insertBudget(targetBudget: Budget) {
         viewModelScope.launch {
-            val targetBudget = Budget(
-                budget_name = "Monthly Allocation",
-                cat_id = catId,
-                limit = limitAmount,
-                month = currentMonth
-            )
             expensesRepository.insertBudget(targetBudget)
         }
     }
@@ -440,6 +434,10 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             expensesRepository.deleteBudget(budgetId)
         }
+    }
+
+    fun changeSelectedMonth(newMonth: String) {
+        selectedMonth = newMonth
     }
 
 
