@@ -14,6 +14,12 @@ import androidx.room.PrimaryKey
             parentColumns = ["transaction_id"],
             childColumns = ["parent_id"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Category::class,
+            parentColumns = ["cat_id"],
+            childColumns = ["cat_id"],
+            onDelete = ForeignKey.SET_NULL
         )
     ]
 )
@@ -24,6 +30,5 @@ data class SplitTransaction(
     val amount: Double,
     val name: String,
     val is_excluded: Boolean,
-    val cat_primary: String?,
-    val cat_detailed: String?
+    val cat_id: Int? = null
 )

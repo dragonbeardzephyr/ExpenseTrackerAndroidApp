@@ -4,6 +4,7 @@ import android.R.attr.category
 import android.R.attr.mode
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +33,7 @@ import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.expensetracker.data.Category
 import com.example.expensetracker.ui.ExpensesViewModel
 import com.example.expensetracker.ui.Screens
 import kotlin.collections.listOf
@@ -43,7 +46,7 @@ fun ExpensesScreen(
 ) {
     var selectedView by remember { mutableStateOf(0) }
 
-    val categories = listOf("Food", "Transport", "Entertainment", "Other")
+    val categories = viewModel.categories.value ?: emptyList()
 
     Scaffold (
         modifier = Modifier,
@@ -90,19 +93,33 @@ fun ExpensesScreen(
 
 
 @Composable
-fun CategoryList(mode: Int, categories: List<String>) {
+fun CategoryList(mode: Int, categories: List<Category>) {
 
-    Text(text = "Hello from Category List")
+    Row() {
+        Text(text = "Categories")
+    }
 
     LazyColumn {
-
         items(categories) {category ->
-            Text(text = category)
+
+
+            Card() {
+                Row() {
+                    Text(text = category.cat_name)
+
+                    when (mode) {
+                        0 -> {
+                            //Show spending total for catgeroy
+                        }
+                        1 -> {
+                            //Show Spending out of budget for categroy
+                        }
+                    }
+                }
+            }
+
         }
 
-        items(5) { index ->
-            Text(text = "Category: $index")
-        }
     }
 }
 
@@ -111,7 +128,7 @@ fun CategoryList(mode: Int, categories: List<String>) {
 @Composable
 fun SpendingView(
     modifier: Modifier = Modifier,
-    categories: List<String>
+    categories: List<Category>
 ) {
     Text(text = "Hello from Spending")
 
@@ -129,12 +146,14 @@ fun SpendingView(
 @Composable
 fun BudgetView(
     modifier: Modifier = Modifier,
-    categories: List<String>
+    categories: List<Category>
 ) {
-    Text(text = "Hello from Budget")
 
     Column(modifier = modifier) {
-        // chart then
+
+        Card() {
+
+        }
 
         CategoryList(1, categories)
     }

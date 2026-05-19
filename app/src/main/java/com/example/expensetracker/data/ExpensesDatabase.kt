@@ -12,8 +12,10 @@ import androidx.room.TypeConverters
         Account::class,
         Transaction::class,
         SplitTransaction::class,
-        NetWorth::class],
-    version = 3,
+        NetWorth::class,
+        Category:: class,
+        Budget:: class],
+    version = 4,
     exportSchema = false
 )
 

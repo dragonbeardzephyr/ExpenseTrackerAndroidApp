@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.androidSecrets)
 }
 
 android {
@@ -38,6 +39,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true
         viewBinding = true
         compose = true
     }
@@ -88,8 +90,10 @@ dependencies {
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
 
+}
 
 
-
-
+secrets {
+    // Tells the plugin to place the properties directly into your package namespace
+    defaultPropertiesFileName = "local.properties"
 }

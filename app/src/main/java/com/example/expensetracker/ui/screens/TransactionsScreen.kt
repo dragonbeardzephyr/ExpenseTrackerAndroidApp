@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.expensetracker.data.Account
+import com.example.expensetracker.data.Category
 import com.example.expensetracker.data.Transaction
 import com.example.expensetracker.ui.ExpensesViewModel
 import com.example.expensetracker.ui.Screens
@@ -92,6 +93,8 @@ fun TransactionsScreen(
 
     val accountMap = remember(allAccounts) { allAccounts.associateBy { it.account_id } }
 
+    val categoryMap by viewModel.categoryMap.observeAsState(initial = emptyMap())
+
     val accountFilteredTransactions = if (selectedAccountId == null) {
         allTransactions
     } else {
@@ -99,13 +102,14 @@ fun TransactionsScreen(
     }
 
     val filteredTransactions = accountFilteredTransactions.filter {
+        val category = categoryMap[it.cat_id]?.cat_name ?: ""
+
         it.name.contains(query, ignoreCase = true)
                 ||
                 it.merchant_name.contains(query, ignoreCase = true)
-                //||
-                //it.cat_primary.contains(query, ignoreCase = true)
-                //||
-                //it.cat_detailed.contains(query, ignoreCase = true)
+                ||
+                category.contains(query, ignoreCase = true)
+
     }
 
 
@@ -142,6 +146,7 @@ fun TransactionsScreen(
             TransactionList(
                 list = filteredTransactions,
                 accountMap = accountMap,
+                categoryMap = categoryMap,
                 navController = navController
             )
 
@@ -256,6 +261,7 @@ fun TransactionSearchBar(
 fun TransactionList(
     list: List<Transaction>,
     accountMap: Map<String, Account>,
+    categoryMap: Map<Int, Category>,
     navController: NavHostController
 ) {
 
@@ -290,6 +296,8 @@ fun TransactionList(
                     val bankLabel = associatedAccount?.bankName?.ifEmpty { "Bank" } ?: "Unknown Bank"
                     val accountNickname = associatedAccount?.name ?: "Account"
 
+                    val matchedCategory = categoryMap[transaction.cat_id]?.cat_name  ?: "Uncategorised"
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth(),
@@ -314,8 +322,10 @@ fun TransactionList(
                                 )
 
 
+
+
                                 Text(
-                                    text = transaction.cat_primary ?: "",
+                                    text = matchedCategory ?: "",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium,
                                 )

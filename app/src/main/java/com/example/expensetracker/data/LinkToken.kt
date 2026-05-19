@@ -103,8 +103,6 @@ data class PlaidRemovedTransaction(
 )
 
 
-// Add to the bottom of main/java/com/example/expensetracker/data/LinkToken.kt
-
 data class ItemGetRequest(
     val client_id: String,
     val secret: String,
@@ -116,7 +114,8 @@ data class ItemGetResponse(
 )
 
 data class PlaidItemInfo(
-    val institution_id: String?
+    val item_id: String,
+    val institution_id: String? // This is the ID code we need (e.g., "ins_12345")
 )
 
 data class InstitutionGetByIdRequest(
@@ -131,5 +130,5 @@ data class InstitutionGetByIdResponse(
 )
 
 data class PlaidInstitutionDetails(
-    val name: String
+    val name: String // This holds the final human-readable name ("Lloyds Bank", "HSBC")
 )

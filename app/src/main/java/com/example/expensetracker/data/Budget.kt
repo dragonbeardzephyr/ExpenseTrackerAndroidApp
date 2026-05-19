@@ -11,12 +11,13 @@ import androidx.room.PrimaryKey
         ForeignKey(
             entity = Category::class,
             parentColumns = ["cat_id"],
-            childColumns = ["cat_id"]
+            childColumns = ["cat_id"],
+            onDelete = ForeignKey.SET_NULL
         )
     ])
 
 data class Budget(
-    @PrimaryKey val budget_id:Int,
+    @PrimaryKey(autoGenerate = true) val budget_id:Int = 0,
     val budget_name: String,
     val cat_id: Int?,
     val limit: Double,

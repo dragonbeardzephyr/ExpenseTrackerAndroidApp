@@ -26,7 +26,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,11 +52,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.expensetracker.data.Account
+import com.example.expensetracker.data.Category
 import com.example.expensetracker.data.SplitTransaction
 import com.example.expensetracker.data.Transaction
 import com.example.expensetracker.ui.ExpensesViewModel
 import com.example.expensetracker.ui.Screens
 import kotlinx.coroutines.coroutineScope
+import kotlin.collections.get
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +79,13 @@ fun SplitterScreen(
         allAccounts.find { it.account_id == transaction?.account_id }
     }
 
-    val splitTransactions: List<SplitTransaction> by viewModel.getSplitTransactionsById(transactionId ?: "").observeAsState(initial = emptyList())
+    val splitTransactions: List<SplitTransaction> by viewModel.getSplitTransactionsById(
+        transactionId ?: ""
+    ).observeAsState(initial = emptyList())
+
+    val categoryMap: Map<Int, Category> by viewModel.categoryMap.observeAsState(initial = emptyMap())
+
+    val categoriesList by viewModel.categories.observeAsState(initial = emptyList())
 
     // test data
 
@@ -100,7 +110,6 @@ fun SplitterScreen(
         }
     } else {
 
-
         Scaffold(
             modifier = Modifier,
             topBar = {
@@ -110,7 +119,10 @@ fun SplitterScreen(
                         IconButton(onClick = {
                             navController.navigate(Screens.Transactions.name)
                         }) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back Button")
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back Button"
+                            )
                         }
                     }
                 )
@@ -119,7 +131,7 @@ fun SplitterScreen(
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize() //!!!!!!
                     .padding(innerPadding)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -128,7 +140,8 @@ fun SplitterScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                ) { //Main transaciton deets
+                )
+                { //Main transaciton deets
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -182,17 +195,18 @@ fun SplitterScreen(
                             )
                         }
 
-                        transaction.cat_primary?.let {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                        val category = categoryMap[transaction.cat_id]?.cat_name ?: ""
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = category,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
+
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -200,7 +214,8 @@ fun SplitterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ) {
+                )
+                {
 
                     Card(
                         modifier = Modifier.weight(1f),
@@ -240,7 +255,7 @@ fun SplitterScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = "Back Button")
+                        Icon(Icons.Default.Add, contentDescription = "Add Split")
                     }
 
                 }
@@ -275,11 +290,15 @@ fun SplitterScreen(
 
 
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {//split transactions
-
+                ) {//split transactionss
                     items(items = splitTransactions) { st ->
+
+                        val category = categoryMap[st.cat_id]?.cat_name ?: ""
+
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -301,13 +320,13 @@ fun SplitterScreen(
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.SemiBold
                                     )
-                                    st.cat_primary?.let {
-                                        Text(
-                                            text = it,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
+
+                                    Text(
+                                        text = category,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
                                 }
                                 Text(
                                     text = "£${"%.2f".format(st.amount)}",
@@ -317,7 +336,6 @@ fun SplitterScreen(
                             }
                         }
                     }
-
                 }
 
             }
@@ -327,8 +345,9 @@ fun SplitterScreen(
         if (showDialog) {
             SplitEditor(
                 split = selectedSplit,
-                parentId = transaction.transaction_id,
-                defaultCategory = transaction.cat_primary,
+                parentId = transaction?.transaction_id ?: "",
+                defaultCategoryId = transaction?.cat_id,
+                categories = categoriesList,
                 onDismiss = { showDialog = false },
                 onConfirm = {
                     viewModel.insertSplitTransaction(split = it)
@@ -341,8 +360,6 @@ fun SplitterScreen(
             )
         }
 
-
-
     }
 
 }
@@ -350,11 +367,14 @@ fun SplitterScreen(
 
 
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SplitEditor(
     split: SplitTransaction?,
     parentId: String,
-    defaultCategory: String?,
+    defaultCategoryId: Int?,
+    categories: List<Category>,
     onDismiss: () -> Unit,
     onConfirm: (SplitTransaction) -> Unit,
     onDelete: (SplitTransaction) -> Unit
@@ -362,8 +382,13 @@ fun SplitEditor(
     // Dynamic initialization of fields depending on execution modes
     var nameInput by remember { mutableStateOf(split?.name ?: "") }
     var amountInput by remember { mutableStateOf(split?.amount?.toString() ?: "") }
-    var categoryInput by remember { mutableStateOf(split?.cat_primary ?: defaultCategory ?: "") }
+
     var isExcludedInput by remember { mutableStateOf(split?.is_excluded ?: false) }
+
+    var dropdownExpanded by remember { mutableStateOf(false) }
+    var selectedCategoryId by remember { mutableStateOf(split?.cat_id ?: defaultCategoryId) }
+    var selectedCategoryLabel =
+        categories.find { it.cat_id == selectedCategoryId }?.cat_name ?: ""
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -395,12 +420,37 @@ fun SplitEditor(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedTextField(
-                        value = categoryInput,
-                        onValueChange = { categoryInput = it },
-                        label = { Text("Category") },
-                        modifier = Modifier.weight(1f),
-                    )
+                    ExposedDropdownMenuBox(
+                        expanded = dropdownExpanded,
+                        onExpandedChange = { dropdownExpanded = !dropdownExpanded },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        OutlinedTextField(
+                            value = selectedCategoryLabel,
+                            onValueChange = { },
+                            readOnly = true,
+                            label = { Text("Category") },
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+
+                            )
+
+                        ExposedDropdownMenu(
+                            expanded = dropdownExpanded,
+                            onDismissRequest = { dropdownExpanded = false }
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category.cat_name) },
+                                    onClick = {
+                                        selectedCategoryId = category.cat_id
+                                        dropdownExpanded = false
+                                    }
+                                )
+                            }
+
+                        }
+
+                    }
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -416,8 +466,6 @@ fun SplitEditor(
             }
         },
 
-
-
         confirmButton = {
             Button(
                 onClick = {
@@ -430,9 +478,7 @@ fun SplitEditor(
                             amount = parsedPriceValue,
                             name = nameInput,
                             is_excluded = isExcludedInput,
-                            cat_primary = categoryInput.ifEmpty { null },
-                            cat_detailed = ""
-
+                            cat_id = selectedCategoryId
                         )
 
 
@@ -470,3 +516,4 @@ fun SplitEditor(
         }
     )
 }
+

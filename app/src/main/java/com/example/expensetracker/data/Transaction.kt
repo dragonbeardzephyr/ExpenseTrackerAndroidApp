@@ -15,6 +15,12 @@ import java.time.LocalDateTime
             parentColumns = ["account_id"],
             childColumns = ["account_id"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Category::class,
+            parentColumns = ["cat_id"],
+            childColumns = ["cat_id"],
+            onDelete = ForeignKey.SET_NULL
         )
     ]
 )
@@ -28,8 +34,7 @@ data class Transaction(
     val merchant_name:String,
     val name:String,
     val is_excluded:Boolean,
-    val cat_primary:String?,
-    val cat_detailed:String?,
+    val cat_id: Int? = null,
     val pending:Boolean,
     val is_split:Boolean = false
 )
