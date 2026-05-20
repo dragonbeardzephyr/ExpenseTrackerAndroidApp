@@ -55,14 +55,12 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
     }
 
 
-
     // Split Transactions
 
     suspend fun insertSplitTransaction(split: SplitTransaction) {
         expensesDao.insertSplitTransaction(split)
         expensesDao.updateSplitStatus(split.parent_id, true)
     }
-
 
     suspend fun deleteSplitTransaction(splitId: Int, parentId: String) {
         expensesDao.deleteSplitTransaction(splitId)
@@ -73,7 +71,6 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
             expensesDao.updateSplitStatus(parentId, false)
         }
     }
-
 
     fun getSplitTransactionsByTransaction(transactionId: String): LiveData<List<SplitTransaction>> {
         return expensesDao.getSplitTransactionsByTransaction(transactionId)
@@ -86,7 +83,6 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
 
 
     // Categories
-
 
     suspend fun insertCategory(category: Category): Int {
         return expensesDao.insertCategory(category).toInt()
@@ -122,8 +118,6 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
     suspend fun deleteBudget(budgetId: Int) {
         expensesDao.deleteBudget(budgetId)
     }
-
-
 
 
 }

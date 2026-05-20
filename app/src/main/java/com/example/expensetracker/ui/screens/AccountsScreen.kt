@@ -1,5 +1,6 @@
 package com.example.expensetracker.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,9 +52,11 @@ fun AccountsScreen(
     val accounts by viewModel.accounts.observeAsState(initial = emptyList())
     val netWorth by viewModel.derivedNetWorth.observeAsState(initial = 0.0)
 
-    // here we should also pull some aggregate data of net worth over previous months, to form a line chart
+    // val allNetWorth = viewModel.getAllNetWorth() // For net worth over time graph
 
-    fun addOfflineAccount() {}
+
+    fun addOfflineAccount() {}  // Implement?
+    //fun removeOfflineAccount() {}
 
     Scaffold(
         modifier = Modifier,
@@ -84,6 +87,7 @@ fun AccountsScreen(
             }//Title
 
             Box { //Show total net worth here?
+                //Canvas() {}
 
             }
 
@@ -93,14 +97,15 @@ fun AccountsScreen(
                 ) {
                     Icon(Icons.Filled.DomainAdd, contentDescription = "Add Bank Account")
                 }
-                Box {}//Add account button offline
-            }// Add acounts section
 
-            Button(//Add account button onffline
-                onClick = { addOfflineAccount() }
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Offline Account")
+                /*
+                Button( // Add offline account button
+                    onClick = { addOfflineAccount() }
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Add Offline Account")
+                }*/
             }
+
 
             LazyColumn(modifier = Modifier.padding()) // List of accounts
             {

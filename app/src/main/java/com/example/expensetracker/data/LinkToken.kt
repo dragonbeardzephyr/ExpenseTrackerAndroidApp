@@ -8,7 +8,6 @@ data class LinkTokenUser(
     val email_address: String
 )
 
-
 data class LinkTokenRequest(
     val client_id: String,
     val secret: String,
@@ -30,8 +29,8 @@ data class TokenExchangeRequest(
     val secret: String,
     val public_token: String
 )
-data class TokenExchangeResponse(val access_token: String, val item_id: String)
 
+data class TokenExchangeResponse(val access_token: String, val item_id: String)
 
 
 data class AccountsGetRequest(
@@ -115,7 +114,7 @@ data class ItemGetResponse(
 
 data class PlaidItemInfo(
     val item_id: String,
-    val institution_id: String? // This is the ID code we need (e.g., "ins_12345")
+    val institution_id: String?
 )
 
 data class InstitutionGetByIdRequest(
@@ -130,5 +129,5 @@ data class InstitutionGetByIdResponse(
 )
 
 data class PlaidInstitutionDetails(
-    val name: String // This holds the final human-readable name ("Lloyds Bank", "HSBC")
+    val name: String
 )

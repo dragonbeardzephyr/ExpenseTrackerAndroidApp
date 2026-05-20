@@ -1,13 +1,7 @@
 package com.example.expensetracker.ui.screens
 
-import android.R.attr.angle
+
 import android.R.attr.category
-import android.R.attr.mode
-import android.R.attr.name
-import android.R.attr.onClick
-import android.R.attr.text
-import android.service.autofill.Validators.or
-import android.text.TextUtils.split
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -27,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,9 +30,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -52,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,30 +52,26 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PaintingStyle.Companion.Stroke
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.expensetracker.data.Budget
 import com.example.expensetracker.data.Category
 import com.example.expensetracker.ui.ExpensesViewModel
-import com.example.expensetracker.ui.Screens
 import kotlin.collections.listOf
 import kotlin.collections.map
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.input.KeyboardType
-import com.example.expensetracker.data.SplitTransaction
+import com.example.expensetracker.data.Transaction
 import java.time.format.DateTimeFormatter
 
 
 val colours = listOf(
-    Color(0xFF8346EF), Color(0xFF00D2BE), Color(0xFFF19002),
-    Color(0xFFFFE600), Color(0xFF4BB9EA), Color(0xFF1EB224),
-    Color(0xFF1EB224), Color(0xFF1EB224), Color(0xFF1EB224)
+    Color(0xFF9FA8DA), Color(0xFFCE93D8), Color(0xFFEF9A9A),
+    Color(0xFFFFF59D), Color(0xFFC5E1A5), Color(0xFF81D4FA),
+    Color(0xFF653500), Color(0xFF26A69A), Color(0xFFFFCC80)
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -137,7 +125,7 @@ fun ExpensesScreen(
             if (!parentTransaction.is_excluded) {
                 var parentTotal = parentTransaction.amount
 
-                if (parentTransaction.is_split) {
+                if (parentTransaction.is_split) { // Adds split amounts to each of their respective categories
                     val splitTransactions =
                         allSplitTransactions.filter { it.parent_id == parentTransaction.transaction_id }
 
@@ -155,7 +143,7 @@ fun ExpensesScreen(
 
                 }
 
-                calculatedMap[parentTransaction.cat_id ?: 0] =
+                calculatedMap[parentTransaction.cat_id ?: 0] = // Adds any leftover unsplit amount to the parent's category
                     calculatedMap.getOrDefault(parentTransaction.cat_id ?: 0, 0.0) + parentTotal
             }
         }
@@ -167,7 +155,6 @@ fun ExpensesScreen(
             currentBudgets.none { budget -> budget.cat_id == cat.cat_id }
         }
     }
-
 
     Scaffold (
         modifier = Modifier,
@@ -246,14 +233,15 @@ fun ExpensesScreen(
                         SpendingView(
                             modifier = Modifier.weight(1f),
                             categories = categories,
-                            spendingMap = spendingMap
+                            spendingMap = spendingMap,
+                            transactions = filteredTransactionsForMonth
                         )
                     }
                 }
 
                 1 -> {
                     if (currentBudgets.isEmpty()) {
-                        Text(text = "No Budgets set")
+                        Text(text = "No Budgets set for this period")
                     } else {
                         BudgetView(
                             modifier=Modifier.weight(1f),
@@ -281,12 +269,12 @@ fun ExpensesScreen(
                 } else {
                     unbudgetedCategories
                 }
-            }
+            } // unbudgeted plus current category
 
             AddBudgetDialog(
                 budget = selectedBudget,
                 onDismiss = { showAddBudgetDialog = false },
-                unbudgetedCategories = availableCategoriesForDialog, // unbudgeted plus current category
+                unbudgetedCategories = availableCategoriesForDialog,
                 onConfirm = { updatedBudget ->
                     viewModel.insertBudget(updatedBudget)
                     showAddBudgetDialog = false
@@ -294,7 +282,7 @@ fun ExpensesScreen(
                 onDelete = { budgetToDelete ->
                     viewModel.removeBudget(budgetToDelete.budget_id)
                     showAddBudgetDialog = false}
-                //showAddBudgetDialog = showAddBudgetDialog
+
             )
         }
 
@@ -323,10 +311,12 @@ fun CategoryList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        items(categories) {category ->
+        items(count = categories.size) {index ->
+            val category = categories[index]
+
             val totalSpent = spendingMap[category.cat_id] ?: 0.0
 
-            val borderColour = categoryColourMap[category.cat_id] ?: Color.Transparent
+            val borderColour = colours[index % categories.size]
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -366,13 +356,18 @@ fun SpendingView(
     modifier: Modifier = Modifier,
     categories: List<Category>,
     spendingMap: Map<Int, Double>,
+    transactions: List<Transaction>
 ) {
 
     Column(modifier = modifier) {
-        //chart then
+        //chart for spending over month here
+
+
+
+
         val spentCategories = remember(categories, spendingMap) {
             categories.filter {
-                spendingMap[it.cat_id] ?: 0.0 > 0.0
+                (spendingMap[it.cat_id] ?: 0.0) > 0.0
             }.sortedByDescending { spendingMap[it.cat_id] ?: 0.0}
         }
 
@@ -393,16 +388,6 @@ fun BudgetView(
     onBudgetClick: (Budget) -> Unit
 ) {
 
-    val categoryColourMap = remember(budgets, spendingMap) {
-        budgets.associate { budget ->
-            val targetId = budget.cat_id ?: 0
-            val index = budgets.indexOf(budget)
-            val spend = spendingMap[targetId] ?: 0.0
-            val colourBase = colours[index % colours.size]
-            val operationalColor = if (spend > budget.limit) Color(0xFFFF0000) else colourBase
-            targetId to operationalColor
-        }
-    }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -444,7 +429,6 @@ fun BudgetView(
                 categories = budgetedCategories,
                 spendingMap = spendingMap,
                 budgets = budgets,
-                categoryColourMap = categoryColourMap,
                 onItemClick = { clickedCategory ->
                     val associatedBudget = budgets.find { it.cat_id == clickedCategory.cat_id }
                     if (associatedBudget != null) onBudgetClick(associatedBudget)
@@ -491,7 +475,6 @@ fun AddBudgetDialog(
     onDismiss: () -> Unit,
     onConfirm: (Budget) -> Unit,
     onDelete: (Budget) -> Unit,
-    //showAddBudgetDialog: Boolean,
     budget: Budget? = null,
 ) {
 
@@ -501,12 +484,13 @@ fun AddBudgetDialog(
     var dropdownExpanded by remember { mutableStateOf(false) }
 
     var selectedCategoryIndex by remember {
-        mutableStateOf(value =
+        mutableIntStateOf(value =
             if (budget != null) {
                 val foundId = unbudgetedCategories.indexOfFirst { it.cat_id == budget.cat_id }
                 if (foundId != -1) foundId else 0
             } else 0
-    )}
+    )
+    }
 
     val selectedCategoryLabel = unbudgetedCategories.getOrNull(selectedCategoryIndex)?.cat_name ?: "Select Category"
 
@@ -545,7 +529,6 @@ fun AddBudgetDialog(
                         label = { Text("Category") },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor(),
 
                         )
 
@@ -636,7 +619,7 @@ fun BudgetPieChart(
 
         if (totalBudgetLimit == 0f) return
 
-        val angle = 360f / budgets.size
+        //val angle = 360f / budgets.size
 
         var startAngle = -90f
 
@@ -645,28 +628,22 @@ fun BudgetPieChart(
             val centerPoint = Offset(size.width / 2, size.height / 2)
 
             val neutralCircleRadius = size.width / 3.5f
-            //val maxCanvasRadius = size.width / 2f  //Adjust after reviewing in test
+
 
             budgets.forEachIndexed {index, budget ->
-                //val angle = (budget.limit.toFloat() / totalBudgetLimit) * 360f
+                val angle = (budget.limit.toFloat() / totalBudgetLimit) * 360f
                 val spend = spendingMap[budget.cat_id] ?: 0.0
                 val spendRatio = if (budget.limit > 0) (spend / budget.limit).toFloat() else 0f
 
-                val radiusFactor = if (spendRatio > 1.0f) { //Slower radius gain for over budgeted view, capped at 1.2 to prevent other categories from downscaling
-                    (1.0f + (spendRatio - 1.0f) * 0.15f).coerceAtMost(1.2f)
+                val radiusFactor = if (spendRatio > 1.0f) { //Slower radius gain for over budgeted categories, capped to prevent other categories from downscaling
+                    (1.0f + (spendRatio - 1.0f) * 0.15f).coerceAtMost(2f)
                 } else {
                     spendRatio
                 }
 
                 val sectorRadius = (radiusFactor * neutralCircleRadius)
 
-                val baseSectorColour = colours[index % colours.size]
-
-                val sectorColour = if (spend > budget.limit) {
-                    Color(0xFFFF4D4D).copy(alpha = 0.85f)
-                } else {
-                    baseSectorColour.copy(alpha = 0.8f)
-                }
+                val sectorColour = colours[index % colours.size]
 
                 if (sectorRadius > 0f) {
                     drawArc(

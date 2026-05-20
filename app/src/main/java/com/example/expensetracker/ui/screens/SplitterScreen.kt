@@ -1,8 +1,5 @@
 package com.example.expensetracker.ui.screens
 
-import android.R.attr.name
-import android.R.attr.onClick
-import android.widget.ToggleButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.getValue
@@ -38,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
@@ -57,7 +53,6 @@ import com.example.expensetracker.data.SplitTransaction
 import com.example.expensetracker.data.Transaction
 import com.example.expensetracker.ui.ExpensesViewModel
 import com.example.expensetracker.ui.Screens
-import kotlinx.coroutines.coroutineScope
 import kotlin.collections.get
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,13 +89,12 @@ fun SplitterScreen(
     //    SplitTransaction(2, transactionId ?: "", 10.0, "Split 2", false, null, null)
     //)
 
-
-    var splitSum = splitTransactions.sumOf { it.amount }
+    val splitSum = splitTransactions.sumOf { it.amount }
     val amount = transaction?.amount ?: 0.0
-    var unsplitAmount = amount - splitSum
+    val unsplitAmount = amount - splitSum
 
 
-    var showDialog by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) } // For the add/edit split dialog
     var selectedSplit by remember { mutableStateOf<SplitTransaction?>(null) }
 
 
@@ -131,7 +125,7 @@ fun SplitterScreen(
         ) { innerPadding ->
             Column(
                 modifier = Modifier
-                    .fillMaxSize() //!!!!!!
+                    .fillMaxSize() //!!!!!! Keep an eye on this...
                     .padding(innerPadding)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -141,7 +135,7 @@ fun SplitterScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 )
-                { //Main transaciton deets
+                { //Main transaciton details
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -249,7 +243,7 @@ fun SplitterScreen(
                     FloatingActionButton(
                         modifier = Modifier.padding(start = 16.dp),
                         onClick = {
-                            if (splitSum < amount) { //Wont split if ther eis no more to split
+                            if (splitSum < amount) { //Wont split if there is no more to split
                                 selectedSplit = null
                                 showDialog = true
                             }
@@ -294,7 +288,7 @@ fun SplitterScreen(
                         .fillMaxWidth()
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {//split transactionss
+                ) {//split transactions
                     items(items = splitTransactions) { st ->
 
                         val category = categoryMap[st.cat_id]?.cat_name ?: ""
@@ -347,8 +341,8 @@ fun SplitterScreen(
 
             SplitEditor(
                 split = selectedSplit,
-                parentId = transaction?.transaction_id ?: "",
-                defaultCategoryId = transaction?.cat_id,
+                parentId = transaction.transaction_id,
+                defaultCategoryId = transaction.cat_id,
                 categories = categoriesList,
                 unsplitAmount = unsplitAmount,
                 onDismiss = { showDialog = false },
@@ -383,7 +377,7 @@ fun SplitEditor(
     onConfirm: (SplitTransaction) -> Unit,
     onDelete: (SplitTransaction) -> Unit
 ) {
-    // Dynamic initialization of fields depending on execution modes
+
     var nameInput by remember { mutableStateOf(split?.name ?: "") }
     var amountInput by remember { mutableStateOf(split?.amount?.toString() ?: "") }
 
@@ -391,7 +385,7 @@ fun SplitEditor(
 
     var dropdownExpanded by remember { mutableStateOf(false) }
     var selectedCategoryId by remember { mutableStateOf(split?.cat_id ?: defaultCategoryId) }
-    var selectedCategoryLabel =
+    val selectedCategoryLabel =
         categories.find { it.cat_id == selectedCategoryId }?.cat_name ?: ""
 
     AlertDialog(
@@ -487,7 +481,6 @@ fun SplitEditor(
                                 is_excluded = isExcludedInput,
                                 cat_id = selectedCategoryId
                             )
-
 
                             onConfirm(updatedSplit)
 

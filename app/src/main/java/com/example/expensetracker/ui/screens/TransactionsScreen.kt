@@ -1,10 +1,5 @@
 package com.example.expensetracker.ui.screens
 
-import android.R.attr.fontWeight
-import android.R.attr.label
-import android.R.attr.onClick
-import android.R.attr.text
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,35 +9,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReadMore
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.ReadMore
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -54,10 +36,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,9 +45,6 @@ import com.example.expensetracker.data.Category
 import com.example.expensetracker.data.Transaction
 import com.example.expensetracker.ui.ExpensesViewModel
 import com.example.expensetracker.ui.Screens
-import kotlinx.coroutines.selects.select
-import java.text.NumberFormat
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -168,7 +143,6 @@ fun AccountFilterBar(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    // Determine the text to display on the closed dropdown box
     val currentSelectionLabel = if (selectedAccountId == null) {
         "All Accounts"
     } else {
@@ -187,12 +161,11 @@ fun AccountFilterBar(
             OutlinedTextField(
                 value = currentSelectionLabel,
                 onValueChange = {},
-                readOnly = true, // Prevents typing; forces dropdown selection
+                readOnly = true,
                 label = { Text("Filter by Account") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(), // Material 3 anchoring modifier
+                    .fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium
             )
 
@@ -200,7 +173,6 @@ fun AccountFilterBar(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                // Option 1: Clear the filter (Show All)
                 DropdownMenuItem(
                     text = { Text("All Accounts") },
                     onClick = {
@@ -209,7 +181,6 @@ fun AccountFilterBar(
                     }
                 )
 
-                // Option 2: Dynamic list of linked accounts
                 accounts.forEach { account ->
                     DropdownMenuItem(
                         text = { Text(account.bankName + " " + account.name) },
@@ -271,7 +242,7 @@ fun TransactionList(
     }
 
     val dateFormatter = remember {
-        DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault())
+        DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault()) // eg: May 1, 2023
     }
 
     if (list.isEmpty()) {
@@ -322,10 +293,8 @@ fun TransactionList(
                                 )
 
 
-
-
                                 Text(
-                                    text = matchedCategory ?: "",
+                                    text = matchedCategory,
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.Medium,
                                 )

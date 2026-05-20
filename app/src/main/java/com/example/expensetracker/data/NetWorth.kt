@@ -7,6 +7,6 @@ import java.time.LocalDate
 
 @Entity(tableName = "net_worth")
 data class NetWorth(
-    @PrimaryKey() val date: LocalDate, // YYYY-MM-DD, do an on replace thing here, if you sync more than once a day
+    @PrimaryKey() val date: LocalDate, // YYYY-MM-DD
     val amount: Double
 )

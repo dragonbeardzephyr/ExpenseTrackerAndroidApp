@@ -27,7 +27,6 @@ abstract class ExpensesDatabase: RoomDatabase() {
         @Volatile
         private var Instance: ExpensesDatabase? = null
         fun getDatabase(context: Context):ExpensesDatabase {
-            // if the Instance is not null, return it, otherwise create a new database instance.
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, ExpensesDatabase::class.java, "expenses")
                     .fallbackToDestructiveMigration(true)

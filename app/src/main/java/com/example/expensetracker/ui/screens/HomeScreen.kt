@@ -125,7 +125,7 @@ fun AccountsList(
 
         item {
             Card {
-                Text(text = netWorth.toString() ?: "0.0")
+                Text(text = netWorth.toString())
                 Text(text = "Net Worth")
             }
         }

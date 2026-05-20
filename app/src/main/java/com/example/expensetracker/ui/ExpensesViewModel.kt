@@ -2,6 +2,7 @@ package com.example.expensetracker.ui
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import android.app.Application
+import android.text.TextUtils.split
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -32,7 +33,7 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
 
         viewModelScope.launch {
             if (expensesRepository.getCategoryCount() == 0) {
-                val basePresets = listOf(
+                val basePresets = listOf( // Seeded some categories
                     Category(
                         cat_id = 1,
                         cat_name = "Groceries",
@@ -80,7 +81,7 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
             }
         }
 
-        checkAndSync()
+        checkAndSync() // Sync account & transaction data on startup
 
     }
 
@@ -101,13 +102,12 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
 
     private val _selectedMonthLive = MutableLiveData(YearMonth.now().toString())
 
-    var selectedMonth by mutableStateOf(java.time.YearMonth.now().toString())
-        private set // debugged liek this, idk what this mean :(
+    var selectedMonth by mutableStateOf(YearMonth.now().toString())
+        private set // debugged like this, do not delete, it works now
 
     val budgetsForMonth: LiveData<List<Budget>> = _selectedMonthLive.switchMap {
         expensesRepository.getBudgetsForMonth(selectedMonth)
     }
-
 
     val clientUserId = "user_id"
 
@@ -131,7 +131,7 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
                 preferenceManager.saveAccessToken(response.access_token)
                 preferenceManager.saveSyncCursor("")
 
-                // Triggers fresh structural sync automatically
+                // Triggers fresh sync automatically
                 syncAccounts()
                 syncTransactions()
 
@@ -144,7 +144,7 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
     fun getLinkToken(onSuccess: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val user = LinkTokenUser(
+                val user = LinkTokenUser( // Not required in sandbox/testing phase
                     clientUserId,
                     "legal name",
                     "447467983412",
@@ -167,7 +167,9 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
             val lastSync = preferenceManager.lastSyncTime.first()
             val currentTime = System.currentTimeMillis()
 
-            if (currentTime - lastSync > 1000) {
+            val syncTimeGap = 1000 // Kept at 1 sec for easy iterative testing
+
+            if (currentTime - lastSync > syncTimeGap) {
                 syncAccounts()
                 syncTransactions()
                 preferenceManager.saveSyncTime(currentTime)
@@ -243,7 +245,7 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
                         expensesRepository.insertAccount(dbAccount)
                     }
 
-                    // Calculate historical net worth from your static table states
+
                     val updatedAccountsList = expensesRepository.getAccountsStatic()
                     val databaseNetWorthCalculated =
                         updatedAccountsList.sumOf { it.current_balance }
@@ -435,7 +437,11 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
     }
 
 
-    fun insertAccount() {} //Offline Accounts
+    fun getAllNetWorth() {
+        expensesRepository.getAllNetWorth()
+    }
+
+    fun insertAccount() {} //Offline Accounts: Implement or Deprecate?
     fun removeAccount() {}
 
 
@@ -450,11 +456,11 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
 
     }
 
-    fun updateSplitTransaction(split: SplitTransaction) {
+    /*fun updateSplitTransaction(split: SplitTransaction) {
         viewModelScope.launch {
             expensesRepository.insertSplitTransaction(split)
         }
-    }
+    }*/
 
     fun deleteSplitTransaction(splitId: Int, parentId: String) {
         viewModelScope.launch {
@@ -462,13 +468,11 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-
     fun insertCategory(category: Category) {
         viewModelScope.launch {
             expensesRepository.insertCategory(category)
         }
     }
-
 
     fun insertBudget(targetBudget: Budget) {
         viewModelScope.launch {

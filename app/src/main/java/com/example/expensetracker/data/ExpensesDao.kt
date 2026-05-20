@@ -4,17 +4,14 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.OnConflictStrategy
 import androidx.room.Insert
-
 import androidx.room.Query
-import androidx.room.Update
 import androidx.room.Upsert
 
-import java.time.LocalDate
+
 
 @Dao
 interface ExpensesDao {
     // Account
-
 
     @Upsert() // do we want to ignore or replace?
     suspend fun insertAccount(account: Account)
@@ -81,7 +78,6 @@ interface ExpensesDao {
 
 
     //Categories
-
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: Category): Long

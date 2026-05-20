@@ -21,9 +21,7 @@ class MainActivity: ComponentActivity() {
     private val linkAccountToPlaid = registerForActivityResult(FastOpenPlaidLink()) { result ->
         when (result) {
             is LinkSuccess -> {
-                // This is the "handshake" token Plaid gives you
                 val publicToken = result.publicToken
-
                 viewModel.exchangePublicToken(publicToken)
             }
             is LinkExit -> {
@@ -49,7 +47,6 @@ class MainActivity: ComponentActivity() {
             ExpenseTrackerTheme {
                 ExpensesApp(onAddAccountClick = { openPlaidLink() })
             }
-
         }
     }
 
