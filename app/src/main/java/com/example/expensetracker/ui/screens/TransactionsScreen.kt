@@ -1,9 +1,12 @@
 package com.example.expensetracker.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,8 +28,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -36,6 +42,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -122,7 +129,9 @@ fun TransactionsScreen(
                 list = filteredTransactions,
                 accountMap = accountMap,
                 categoryMap = categoryMap,
-                navController = navController
+                navController = navController,
+                modifier = Modifier.weight(1f),
+                viewModel = viewModel
             )
 
         }
@@ -233,7 +242,9 @@ fun TransactionList(
     list: List<Transaction>,
     accountMap: Map<String, Account>,
     categoryMap: Map<Int, Category>,
-    navController: NavHostController
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    viewModel: ExpensesViewModel = viewModel()
 ) {
 
     val groupedTransactions = remember(list) {
@@ -245,12 +256,16 @@ fun TransactionList(
         DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.getDefault()) // eg: May 1, 2023
     }
 
+
     if (list.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = "No transactions found", style = MaterialTheme.typography.bodyLarge)
         }
+
     } else {
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
             groupedTransactions.forEach { (date, transactionsForDate) ->
                 item {
                     Text(
@@ -262,7 +277,7 @@ fun TransactionList(
                     )
                 }
 
-                items(transactionsForDate) { transaction ->
+                items(transactionsForDate, key = { it.transaction_id }) { transaction ->
                     val associatedAccount = accountMap[transaction.account_id]
                     val bankLabel = associatedAccount?.bankName?.ifEmpty { "Bank" } ?: "Unknown Bank"
                     val accountNickname = associatedAccount?.name ?: "Account"
@@ -276,64 +291,83 @@ fun TransactionList(
                             if (transaction.amount > 0) navController.navigate(Screens.Splitter.name + "/${transaction.transaction_id}") },
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
 
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
 
-                                Text(
-                                    text = transaction.merchant_name.ifEmpty { transaction.name },
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                    Row {
+                                        Text(
+                                            text = transaction.merchant_name.ifEmpty { transaction.name },
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+
+                                        if (transaction.is_excluded) {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Excluded Transaction Indicator",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+
+                                    }
 
 
-                                Text(
-                                    text = matchedCategory,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium,
-                                )
 
-                                if (transaction.merchant_name.isNotEmpty() && transaction.name != transaction.merchant_name) {
+
                                     Text(
-                                        text = transaction.name,
+                                        text = matchedCategory,
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(bottom = 2.dp)
+                                        fontWeight = FontWeight.Medium,
+                                    )
+
+                                    if (transaction.merchant_name.isNotEmpty() && transaction.name != transaction.merchant_name) {
+                                        Text(
+                                            text = transaction.name,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(bottom = 2.dp)
+                                        )
+                                    }
+
+                                    Text(
+                                        text = "$bankLabel • $accountNickname",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
 
+
+
+
+                                if (transaction.is_split) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ReadMore,
+                                        contentDescription = "Split Transaction Indicator",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+
+                                val expense = transaction.amount > 0
+                                val amount =
+                                    if (!expense) -1 * transaction.amount else transaction.amount
+                                val plus = if (expense) "" else "+"
+
                                 Text(
-                                    text = "$bankLabel • $accountNickname",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = "$plus£${"%.2f".format(amount)}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (expense) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary
                                 )
                             }
-
-                            if (transaction.is_split) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ReadMore,
-                                    contentDescription = "Split Transaction Indicator",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-
-                            val expense = transaction.amount > 0
-                            val amount = if (!expense) -1 * transaction.amount else transaction.amount
-                            val plus = if (expense) "" else "+"
-
-                            Text(
-                                text = "$plus£${"%.2f".format(amount)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (expense) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary
-                            )
                         }
                     }
                 }

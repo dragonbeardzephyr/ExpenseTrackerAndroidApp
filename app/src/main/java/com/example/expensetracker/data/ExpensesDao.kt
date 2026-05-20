@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.OnConflictStrategy
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 
 
@@ -61,6 +62,9 @@ interface ExpensesDao {
 
     @Query("DELETE FROM split_transactions WHERE split_id = :splitId")
     suspend fun deleteSplitTransaction(splitId: Int)
+
+    @Query("UPDATE transactions SET is_excluded = NOT is_excluded WHERE transaction_id = :transactionId")
+    fun toggleTransactionExclusion(transactionId: String)
 
 
     @Query("SELECT * FROM split_transactions WHERE parent_id = :transactionId")

@@ -491,5 +491,10 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
         _selectedMonthLive.value = newMonth
     }
 
+    fun toggleTransactionExclusion(transactionId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            expensesRepository.toggleTransactionExclusion(transactionId)
+        }
+    }
 
 }

@@ -46,6 +46,10 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
         return expensesDao.getAllTransactions()
     }
 
+    fun toggleTransactionExclusion(transactionId: String) {
+        expensesDao.toggleTransactionExclusion(transactionId)
+    }
+
     fun getTransactionsByAccount(accId: String): LiveData<List<Transaction>> {
         return expensesDao.getTransactionsByAccount(accId)
     }
