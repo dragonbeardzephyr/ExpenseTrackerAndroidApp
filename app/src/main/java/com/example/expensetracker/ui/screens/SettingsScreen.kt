@@ -1,12 +1,16 @@
 package com.example.expensetracker.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +32,8 @@ fun SettingsScreen(
     viewModel: ExpensesViewModel = viewModel(),
     navController: NavHostController
 ) {
+
+    val context = LocalContext.current
     Scaffold(
         modifier = Modifier,
         topBar = {
@@ -51,7 +57,41 @@ fun SettingsScreen(
                 .padding(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Settings")
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+
+            ) {
+
+                Text("Contact us if you spot an error or have any suggestions")
+
+                Button(
+                    onClick = {
+                        val emailIntent = Intent(Intent.ACTION_SENDTO).apply {
+                            data = Uri.parse("mailto:")
+                            putExtra(
+                                Intent.EXTRA_EMAIL,
+                                arrayOf("pereiragavison@gmail.com")
+                            )
+                            putExtra(Intent.EXTRA_SUBJECT, "Expense Tracker App Support")
+                            //putExtra(Intent.EXTRA_TEXT, "")
+                        }
+                        val chooserIntent = Intent.createChooser(emailIntent, "Send Email Via")
+                        if (emailIntent.resolveActivity(context.packageManager) != null || true) {
+                            context.startActivity(chooserIntent)
+                        }
+                    }
+                ) {
+                    Text("Send Email")
+
+                }
+            }
+
+
+
 
         }
     }

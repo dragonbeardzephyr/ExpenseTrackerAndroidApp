@@ -43,7 +43,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -363,8 +362,6 @@ fun SpendingView(
         //chart for spending over month here
 
 
-
-
         val spentCategories = remember(categories, spendingMap) {
             categories.filter {
                 (spendingMap[it.cat_id] ?: 0.0) > 0.0
@@ -484,12 +481,12 @@ fun AddBudgetDialog(
     var dropdownExpanded by remember { mutableStateOf(false) }
 
     var selectedCategoryIndex by remember {
-        mutableIntStateOf(value =
+        mutableStateOf(value =
             if (budget != null) {
                 val foundId = unbudgetedCategories.indexOfFirst { it.cat_id == budget.cat_id }
                 if (foundId != -1) foundId else 0
             } else 0
-    )
+        )
     }
 
     val selectedCategoryLabel = unbudgetedCategories.getOrNull(selectedCategoryIndex)?.cat_name ?: "Select Category"
@@ -521,7 +518,7 @@ fun AddBudgetDialog(
                     expanded = dropdownExpanded,
                     onExpandedChange = { dropdownExpanded = !dropdownExpanded },
 
-                ) {
+                    ) {
                     OutlinedTextField(
                         value = selectedCategoryLabel,
                         onValueChange = { },
@@ -529,6 +526,7 @@ fun AddBudgetDialog(
                         label = { Text("Category") },
                         modifier = Modifier
                             .fillMaxWidth()
+                            .menuAnchor(),// keep this, dropdown breaks without it 😭
 
                         )
 
@@ -619,7 +617,7 @@ fun BudgetPieChart(
 
         if (totalBudgetLimit == 0f) return
 
-        //val angle = 360f / budgets.size
+        val angle = 360f / budgets.size
 
         var startAngle = -90f
 
@@ -628,22 +626,28 @@ fun BudgetPieChart(
             val centerPoint = Offset(size.width / 2, size.height / 2)
 
             val neutralCircleRadius = size.width / 3.5f
-
+            //val maxCanvasRadius = size.width / 2f  //Adjust after reviewing in test
 
             budgets.forEachIndexed {index, budget ->
-                val angle = (budget.limit.toFloat() / totalBudgetLimit) * 360f
+                //val angle = (budget.limit.toFloat() / totalBudgetLimit) * 360f
                 val spend = spendingMap[budget.cat_id] ?: 0.0
                 val spendRatio = if (budget.limit > 0) (spend / budget.limit).toFloat() else 0f
 
-                val radiusFactor = if (spendRatio > 1.0f) { //Slower radius gain for over budgeted categories, capped to prevent other categories from downscaling
-                    (1.0f + (spendRatio - 1.0f) * 0.15f).coerceAtMost(2f)
+                val radiusFactor = if (spendRatio > 1.0f) { //Slower radius gain for over budgeted view, capped at 1.2 to prevent other categories from downscaling
+                    (1.0f + (spendRatio - 1.0f) * 0.15f).coerceAtMost(1.2f)
                 } else {
                     spendRatio
                 }
 
                 val sectorRadius = (radiusFactor * neutralCircleRadius)
 
-                val sectorColour = colours[index % colours.size]
+                val baseSectorColour = colours[index % colours.size]
+
+                val sectorColour = if (spend > budget.limit) {
+                    Color(0xFFFF4D4D).copy(alpha = 0.85f)
+                } else {
+                    baseSectorColour.copy(alpha = 0.8f)
+                }
 
                 if (sectorRadius > 0f) {
                     drawArc(
@@ -688,4 +692,3 @@ fun BudgetPieChart(
 
 
 }
-
