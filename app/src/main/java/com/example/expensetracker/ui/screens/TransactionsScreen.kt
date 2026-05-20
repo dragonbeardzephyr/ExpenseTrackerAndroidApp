@@ -1,12 +1,11 @@
 package com.example.expensetracker.ui.screens
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.background
+
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,11 +27,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -42,7 +38,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -286,12 +281,20 @@ fun TransactionList(
 
                     Card(
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        onClick = {
-                            if (transaction.amount > 0) navController.navigate(Screens.Splitter.name + "/${transaction.transaction_id}") },
+                            .fillMaxWidth()
+                        .combinedClickable(
+                            onClick = {
+                                if (transaction.amount > 0) {
+                                    navController.navigate(Screens.Splitter.name + "/${transaction.transaction_id}")
+                                }
+                            },
+                            onLongClick = {
+                                viewModel.toggleTransactionExclusion(transaction.transaction_id)
+                            }
+                        ),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
 
-                        ) {
+                    ) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -301,11 +304,14 @@ fun TransactionList(
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
 
-                                    Row {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Text(
                                             text = transaction.merchant_name.ifEmpty { transaction.name },
                                             style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.SemiBold
+                                            fontWeight = FontWeight.SemiBold,
+                                            textDecoration = if (transaction.is_excluded) androidx.compose.ui.text.style.TextDecoration.LineThrough else null
                                         )
 
                                         if (transaction.is_excluded) {
@@ -374,5 +380,5 @@ fun TransactionList(
             }
         }
     }
-}
+
 

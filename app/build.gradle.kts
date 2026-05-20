@@ -47,6 +47,10 @@ android {
 
 dependencies {
 
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+
     implementation("androidx.compose.runtime:runtime-livedata:1.6.0")
 
     implementation("com.plaid.link:sdk-core:5.5.1")

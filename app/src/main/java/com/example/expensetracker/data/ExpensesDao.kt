@@ -1,4 +1,6 @@
 package com.example.expensetracker.data
+import android.database.Cursor
+import android.graphics.Movie
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
@@ -116,6 +118,24 @@ interface ExpensesDao {
 
 
 
+
+    // Content Provider
+
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    fun insertAccountCP(account: Account):Long
+
+    @Delete
+    fun deleteAccountCP(account: Account): Int
+
+    @Query("SELECT * FROM accounts")
+    fun getAllAccountsCursor(): Cursor
+
+    @Query("SELECT * from accounts WHERE account_id = :id")
+    fun getAccountItemCursor(id: String): Cursor
+
+    @Query("DELETE FROM accounts")
+    fun clearData()
 
 
 
