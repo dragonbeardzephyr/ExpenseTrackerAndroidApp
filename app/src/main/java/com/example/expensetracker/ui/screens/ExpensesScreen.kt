@@ -1,11 +1,14 @@
 package com.example.expensetracker.ui.screens
 
+import android.R.attr.angle
 import android.R.attr.category
 import android.R.attr.mode
 import android.R.attr.name
+import android.R.attr.onClick
 import android.R.attr.text
 import android.service.autofill.Validators.or
 import android.text.TextUtils.split
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,6 +37,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,6 +79,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.example.expensetracker.data.SplitTransaction
 import java.time.format.DateTimeFormatter
 
+
+val colours = listOf(
+    Color(0xFF8346EF), Color(0xFF00D2BE), Color(0xFFF19002),
+    Color(0xFFFFE600), Color(0xFF4BB9EA), Color(0xFF1EB224),
+    Color(0xFF1EB224), Color(0xFF1EB224), Color(0xFF1EB224)
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpensesScreen(
@@ -87,13 +98,15 @@ fun ExpensesScreen(
 
     var selectedBudget by remember { mutableStateOf<Budget?>(null) }
 
-    val selectedMonth by remember { mutableStateOf(java.time.YearMonth.now().toString()) }
+    //var selectedMonth by remember { mutableStateOf(java.time.YearMonth.now().toString()) }
 
     var monthMenuExpanded by remember { mutableStateOf(false) }
 
     val allTransactions by viewModel.transactions.observeAsState(emptyList())
     val categories by viewModel.categories.observeAsState(emptyList())
     val currentBudgets by viewModel.budgetsForMonth.observeAsState(emptyList())
+
+    val allSplitTransactions by viewModel.allSplitTransactions.observeAsState(emptyList())
 
     val availableMonthsList = remember(allTransactions) {
         val currentCalendarMonth = java.time.YearMonth.now().toString()
@@ -111,13 +124,42 @@ fun ExpensesScreen(
         }
     }
 
+
     val filteredBudgetsForMonth = remember(currentBudgets, viewModel.selectedMonth) {
         currentBudgets.filter { it.month == viewModel.selectedMonth }
     }
 
-    val spendingMap = remember(filteredTransactionsForMonth) {
-        filteredTransactionsForMonth.groupBy { it.cat_id ?: 0 }
-            .mapValues { (_, transactions) -> transactions.sumOf { it.amount } }
+
+    val spendingMap: Map<Int, Double> = remember(filteredTransactionsForMonth, allSplitTransactions) {
+        val calculatedMap = mutableMapOf<Int, Double>()
+
+        filteredTransactionsForMonth.forEach { parentTransaction ->
+            if (!parentTransaction.is_excluded) {
+                var parentTotal = parentTransaction.amount
+
+                if (parentTransaction.is_split) {
+                    val splitTransactions =
+                        allSplitTransactions.filter { it.parent_id == parentTransaction.transaction_id }
+
+                    splitTransactions.forEach { splitTransaction ->
+                        if (!splitTransaction.is_excluded) {
+
+                            calculatedMap[splitTransaction.cat_id ?: 0] =
+                                calculatedMap.getOrDefault(
+                                    splitTransaction.cat_id ?: 0, 0.0
+                                ) + splitTransaction.amount
+
+                            parentTotal -= splitTransaction.amount
+                        }
+                    }
+
+                }
+
+                calculatedMap[parentTransaction.cat_id ?: 0] =
+                    calculatedMap.getOrDefault(parentTransaction.cat_id ?: 0, 0.0) + parentTotal
+            }
+        }
+        calculatedMap
     }
 
     val unbudgetedCategories = remember(categories, filteredBudgetsForMonth) {
@@ -137,7 +179,8 @@ fun ExpensesScreen(
                         Row(
                             modifier = Modifier
                                 .clickable { monthMenuExpanded = true }
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.DateRange, contentDescription = "Select Month")
                             Spacer(modifier = Modifier.size(4.dp))
@@ -167,11 +210,16 @@ fun ExpensesScreen(
         },
         floatingActionButton = {
             if (selectedView == 1 && unbudgetedCategories.isNotEmpty()) {
-                FloatingActionButton(onClick = {
-                    selectedBudget = null
-                    showAddBudgetDialog = true
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = "Add Budget")
+                FloatingActionButton(
+                    onClick = {
+                        selectedBudget = null
+                        showAddBudgetDialog = true },
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    contentColor = MaterialTheme.colorScheme.primary
+                    ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Add Budget")
                 }
             }
         }
@@ -180,7 +228,7 @@ fun ExpensesScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(10.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -261,10 +309,13 @@ fun CategoryList(
     categories: List<Category>,
     spendingMap: Map<Int, Double>,
     budgets: List<Budget> = emptyList(),
+    categoryColourMap: Map<Int, Color> = emptyMap(),
     onItemClick: (Category) -> Unit = {}
 ) {
 
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .padding(vertical = 4.dp)) {
         Text(text = "Categories")
     }
 
@@ -275,9 +326,12 @@ fun CategoryList(
         items(categories) {category ->
             val totalSpent = spendingMap[category.cat_id] ?: 0.0
 
+            val borderColour = categoryColourMap[category.cat_id] ?: Color.Transparent
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                border = if (mode == 1 && borderColour != Color.Transparent) BorderStroke(2.dp, borderColour) else null,
                 onClick = { onItemClick(category) }
             ) {
                 Row(
@@ -289,15 +343,13 @@ fun CategoryList(
                 ) {
                     Text(text = category.cat_name)
 
-                    when (mode) {
-                        0 -> {
-                            Text(text = "£${"%.2f".format(totalSpent)}", fontWeight = FontWeight.Bold)
-                        }
-                        1 -> {
-                            val budget = budgets.find { it.cat_id == category.cat_id }
-                            val limit = budget?.limit ?: 0.0
-                            Text(text = "£${"%.2f".format(limit)}", fontWeight = FontWeight.Bold)
-                        }
+                    if (mode == 0) {
+                        Text(text = "£${"%.2f".format(totalSpent)}", fontWeight = FontWeight.Bold)
+                    } else if (mode == 1) {
+
+                        val budget = budgets.find { it.cat_id == category.cat_id }
+                        val limit = budget?.limit ?: 0.0
+                        Text(text = "£${"%.2f".format(totalSpent)}"+ " / £${"%.2f".format(limit)}", fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -341,18 +393,38 @@ fun BudgetView(
     onBudgetClick: (Budget) -> Unit
 ) {
 
+    val categoryColourMap = remember(budgets, spendingMap) {
+        budgets.associate { budget ->
+            val targetId = budget.cat_id ?: 0
+            val index = budgets.indexOf(budget)
+            val spend = spendingMap[targetId] ?: 0.0
+            val colourBase = colours[index % colours.size]
+            val operationalColor = if (spend > budget.limit) Color(0xFFFF0000) else colourBase
+            targetId to operationalColor
+        }
+    }
+
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally) {
 
         Card(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            BudgetPieChart(
-                budgets = budgets,
-                spendingMap = spendingMap
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BudgetPieChart(
+                    budgets = budgets,
+                    spendingMap = spendingMap
+                )
+            }
         }
 
         val budgetedCategories = remember(categories, budgets) {
@@ -362,7 +434,9 @@ fun BudgetView(
         }
 
         Box(
-            modifier = Modifier.fillMaxWidth().weight(1f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
         ) {
 
             CategoryList(
@@ -370,6 +444,7 @@ fun BudgetView(
                 categories = budgetedCategories,
                 spendingMap = spendingMap,
                 budgets = budgets,
+                categoryColourMap = categoryColourMap,
                 onItemClick = { clickedCategory ->
                     val associatedBudget = budgets.find { it.cat_id == clickedCategory.cat_id }
                     if (associatedBudget != null) onBudgetClick(associatedBudget)
@@ -468,7 +543,9 @@ fun AddBudgetDialog(
                         onValueChange = { },
                         readOnly = true,
                         label = { Text("Category") },
-                        modifier = Modifier.fillMaxWidth().menuAnchor(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
 
                         )
 
@@ -559,34 +636,41 @@ fun BudgetPieChart(
 
         if (totalBudgetLimit == 0f) return
 
-        val colors = listOf(
-            Color(0xFF673AB7), Color(0xFF009688), Color(0xFFFF9800),
-            Color(0xFFE91E63), Color(0xFF03A9F4), Color(0xFF4CAF50)
-        )
+        val angle = 360f / budgets.size
+
+        var startAngle = -90f
 
         Canvas(modifier = modifier.size(280.dp)) {
 
             val centerPoint = Offset(size.width / 2, size.height / 2)
 
             val neutralCircleRadius = size.width / 3.5f
-            val maxCanvasRadius = size.width / 2f  //Adjust after reviewing in test
-
-            var startAngle = -90f
+            //val maxCanvasRadius = size.width / 2f  //Adjust after reviewing in test
 
             budgets.forEachIndexed {index, budget ->
-                val angle = (budget.limit.toFloat() / totalBudgetLimit) * 360f
-
+                //val angle = (budget.limit.toFloat() / totalBudgetLimit) * 360f
                 val spend = spendingMap[budget.cat_id] ?: 0.0
-
                 val spendRatio = if (budget.limit > 0) (spend / budget.limit).toFloat() else 0f
 
-                val sectorRadius = (spendRatio * neutralCircleRadius).coerceAtMost(maxCanvasRadius)
+                val radiusFactor = if (spendRatio > 1.0f) { //Slower radius gain for over budgeted view, capped at 1.2 to prevent other categories from downscaling
+                    (1.0f + (spendRatio - 1.0f) * 0.15f).coerceAtMost(1.2f)
+                } else {
+                    spendRatio
+                }
 
-                val baseSectorColour = colors[index % colors.size]
+                val sectorRadius = (radiusFactor * neutralCircleRadius)
+
+                val baseSectorColour = colours[index % colours.size]
+
+                val sectorColour = if (spend > budget.limit) {
+                    Color(0xFFFF4D4D).copy(alpha = 0.85f)
+                } else {
+                    baseSectorColour.copy(alpha = 0.8f)
+                }
 
                 if (sectorRadius > 0f) {
                     drawArc(
-                        color = baseSectorColour,
+                        color = sectorColour,
                         startAngle = startAngle,
                         sweepAngle = angle,
                         useCenter = true,
@@ -616,7 +700,8 @@ fun BudgetPieChart(
                 radius = neutralCircleRadius,
                 center = centerPoint,
                 style = Stroke(
-                    width = 2.dp.toPx()
+                    width = 2.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 )
             )
 

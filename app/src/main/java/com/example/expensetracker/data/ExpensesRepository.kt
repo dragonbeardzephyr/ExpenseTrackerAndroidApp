@@ -79,6 +79,10 @@ class ExpensesRepository(private val expensesDao: ExpensesDao) {
         return expensesDao.getSplitTransactionsByTransaction(transactionId)
     }
 
+    fun getAllSplitTransactions(): LiveData<List<SplitTransaction>> {
+        return expensesDao.getAllSplitTransactions()
+    }
+
 
 
     // Categories

@@ -1,10 +1,14 @@
 package com.example.expensetracker.ui
-
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.map
+import androidx.lifecycle.switchMap
 import androidx.lifecycle.viewModelScope
 import com.example.expensetracker.data.*
 import com.example.expensetracker.BuildConfig
@@ -15,8 +19,9 @@ import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDate
+import java.time.YearMonth
 
-class ExpensesViewModel(application: Application) : AndroidViewModel(application){
+class ExpensesViewModel(application: Application) : AndroidViewModel(application) {
 
     private val expensesRepository: ExpensesRepository
     private val preferenceManager = ExpensePreferenceManager(application)
@@ -28,13 +33,48 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             if (expensesRepository.getCategoryCount() == 0) {
                 val basePresets = listOf(
-                    Category(cat_id = 1, cat_name = "Groceries", cat_type = "general", cat_plaid = "FOOD_AND_DRINK_GROCERIES"),
-                    Category(cat_id = 2, cat_name = "Eating Out", cat_type = "general", cat_plaid = "FOOD_AND_DRINK_RESTAURANT"),
-                    Category(cat_id = 3, cat_name = "Bills & Utilities", cat_type = "general", cat_plaid = "BILLS_AND_UTILITIES"),
-                    Category(cat_id = 4, cat_name = "Entertainment", cat_type = "general", cat_plaid = "ENTERTAINMENT"),
-                    Category(cat_id = 5, cat_name = "Transport", cat_type = "general", cat_plaid = "TRAVEL_TRANSPORTATION"),
-                    Category(cat_id = 6, cat_name = "Shopping", cat_type = "general", cat_plaid = "TRANSFER_DEPOSIT_SHOPPING"),
-                    Category(cat_id = 7, cat_name = "Other", cat_type = "general", cat_plaid = "OTHER"),
+                    Category(
+                        cat_id = 1,
+                        cat_name = "Groceries",
+                        cat_type = "general",
+                        cat_plaid = "FOOD_AND_DRINK_GROCERIES"
+                    ),
+                    Category(
+                        cat_id = 2,
+                        cat_name = "Eating Out",
+                        cat_type = "general",
+                        cat_plaid = "FOOD_AND_DRINK_RESTAURANT"
+                    ),
+                    Category(
+                        cat_id = 3,
+                        cat_name = "Bills & Utilities",
+                        cat_type = "general",
+                        cat_plaid = "BILLS_AND_UTILITIES"
+                    ),
+                    Category(
+                        cat_id = 4,
+                        cat_name = "Entertainment",
+                        cat_type = "general",
+                        cat_plaid = "ENTERTAINMENT"
+                    ),
+                    Category(
+                        cat_id = 5,
+                        cat_name = "Transport",
+                        cat_type = "general",
+                        cat_plaid = "TRAVEL_TRANSPORTATION"
+                    ),
+                    Category(
+                        cat_id = 6,
+                        cat_name = "Shopping",
+                        cat_type = "general",
+                        cat_plaid = "TRANSFER_DEPOSIT_SHOPPING"
+                    ),
+                    Category(
+                        cat_id = 7,
+                        cat_name = "Other",
+                        cat_type = "general",
+                        cat_plaid = "OTHER"
+                    ),
                 )
                 basePresets.forEach { insertCategory(it) }
             }
@@ -47,6 +87,8 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
     val accounts: LiveData<List<Account>> = expensesRepository.getAccounts()
     val transactions: LiveData<List<Transaction>> = expensesRepository.getAllTransactions()
 
+    val allSplitTransactions: LiveData<List<SplitTransaction>> = expensesRepository.getAllSplitTransactions()
+
     val derivedNetWorth: LiveData<Double> = accounts.map { accountList ->
         accountList.sumOf { it.current_balance }
     }
@@ -57,10 +99,14 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
         list.associateBy { it.cat_id }
     }
 
+    private val _selectedMonthLive = MutableLiveData(YearMonth.now().toString())
 
-    var selectedMonth: String = java.time.YearMonth.now().toString()
+    var selectedMonth by mutableStateOf(java.time.YearMonth.now().toString())
+        private set // debugged liek this, idk what this mean :(
 
-    val budgetsForMonth: LiveData<List<Budget>> = expensesRepository.getBudgetsForMonth(selectedMonth)
+    val budgetsForMonth: LiveData<List<Budget>> = _selectedMonthLive.switchMap {
+        expensesRepository.getBudgetsForMonth(selectedMonth)
+    }
 
 
     val clientUserId = "user_id"
@@ -438,6 +484,7 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
 
     fun changeSelectedMonth(newMonth: String) {
         selectedMonth = newMonth
+        _selectedMonthLive.value = newMonth
     }
 
 

@@ -343,11 +343,14 @@ fun SplitterScreen(
         }
 
         if (showDialog) {
+
+
             SplitEditor(
                 split = selectedSplit,
                 parentId = transaction?.transaction_id ?: "",
                 defaultCategoryId = transaction?.cat_id,
                 categories = categoriesList,
+                unsplitAmount = unsplitAmount,
                 onDismiss = { showDialog = false },
                 onConfirm = {
                     viewModel.insertSplitTransaction(split = it)
@@ -375,6 +378,7 @@ fun SplitEditor(
     parentId: String,
     defaultCategoryId: Int?,
     categories: List<Category>,
+    unsplitAmount: Double,
     onDismiss: () -> Unit,
     onConfirm: (SplitTransaction) -> Unit,
     onDelete: (SplitTransaction) -> Unit
@@ -470,21 +474,24 @@ fun SplitEditor(
             Button(
                 onClick = {
                     val parsedPriceValue = amountInput.toDoubleOrNull() ?: 0.0
-                    if (nameInput.isNotEmpty() && parsedPriceValue > 0.0) {
 
-                        val updatedSplit = SplitTransaction(
-                            split_id = split?.split_id ?: 0,
-                            parent_id = parentId,
-                            amount = parsedPriceValue,
-                            name = nameInput,
-                            is_excluded = isExcludedInput,
-                            cat_id = selectedCategoryId
-                        )
+                    if (parsedPriceValue <= unsplitAmount + (split?.amount ?: 0.0)) {
+
+                        if (nameInput.isNotEmpty() && parsedPriceValue > 0.0 ) {
+
+                            val updatedSplit = SplitTransaction(
+                                split_id = split?.split_id ?: 0,
+                                parent_id = parentId,
+                                amount = parsedPriceValue,
+                                name = nameInput,
+                                is_excluded = isExcludedInput,
+                                cat_id = selectedCategoryId
+                            )
 
 
-                        onConfirm(updatedSplit)
+                            onConfirm(updatedSplit)
 
-
+                        }
                     }
                 }
             ) {

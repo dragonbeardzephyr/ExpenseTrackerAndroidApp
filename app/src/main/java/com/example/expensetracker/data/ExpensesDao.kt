@@ -69,6 +69,9 @@ interface ExpensesDao {
     @Query("SELECT * FROM split_transactions WHERE parent_id = :transactionId")
     fun getSplitTransactionsByTransaction(transactionId: String): LiveData<List<SplitTransaction>>
 
+    @Query("SELECT * FROM split_transactions")
+    fun getAllSplitTransactions(): LiveData<List<SplitTransaction>>
+
     @Query("UPDATE transactions SET is_split = :isSplit WHERE transaction_id = :transactionId")
     suspend fun updateSplitStatus(transactionId: String, isSplit: Boolean)
 
