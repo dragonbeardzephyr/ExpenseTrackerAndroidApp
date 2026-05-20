@@ -169,7 +169,8 @@ fun AccountFilterBar(
                 label = { Text("Filter by Account") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .menuAnchor(), // Keep this, without it dropdown will break
                 shape = MaterialTheme.shapes.medium
             )
 
@@ -256,6 +257,7 @@ fun TransactionList(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(text = "No transactions found", style = MaterialTheme.typography.bodyLarge)
         }
+
 
     } else {
         LazyColumn(

@@ -2,6 +2,11 @@ package com.example.expensetracker.ui.screens
 
 
 import android.R.attr.category
+import android.R.attr.text
+import android.R.id.shareText
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -22,6 +27,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -32,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -417,21 +424,42 @@ fun BudgetView(
     onBudgetClick: (Budget) -> Unit
 ) {
 
+    val context = LocalContext.current
+    val viewModel: ExpensesViewModel = viewModel()
+
 
     Column(
         modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally) {
-
-
-        Card(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp)
         ) {
             BudgetPieChart(
                 budgets = budgets,
                 spendingMap = spendingMap
             )
+
+            IconButton(
+                onClick = {
+                    shareMonthlySummary(
+                        context = context,
+                        selectedMonth = viewModel.selectedMonth,
+                        categories = categories,
+                        budgets = budgets,
+                        spendingMap = spendingMap
+                    )
+                },
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp) // Pushes it slightly inward from the corner edges
+            ) {
+                Icon(
+                    Icons.Default.Share,
+                    contentDescription = "Share"
+                )
+            }
 
         }
 
@@ -442,20 +470,21 @@ fun BudgetView(
             }
         }
 
-
         CategoryList(
             mode = 1,
             categories = budgetedCategories,
             spendingMap = spendingMap,
             budgets = budgets,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier,
             onItemClick = { clickedCategory ->
                 val associatedBudget = budgets.find { it.cat_id == clickedCategory.cat_id }
                 if (associatedBudget != null) onBudgetClick(associatedBudget)
             }
         )
-
     }
+
+
+
 
 }
 
@@ -741,5 +770,58 @@ fun BudgetPieChart(
 }
 
 
+
+fun shareMonthlySummary(
+    context: Context,
+    selectedMonth: String,
+    categories: List<Category>,
+    budgets: List<Budget>,
+    spendingMap: Map<Int, Double>
+) {
+    val text = StringBuilder().apply {
+        append("Monthly Expense Summary for $selectedMonth\n\n")
+
+        val totalSpent = spendingMap.values.sum()
+        val totalLimit = budgets.sumOf { it.limit }
+        val remainingBudget = totalLimit - totalSpent
+
+        if (budgets.isEmpty()) {
+            append("No budgets set for this period")
+        } else {
+
+            append("Total Budget: " + "£${"%.2f".format(totalLimit)}\n")
+            append("Total Spending:  " + "£${"%.2f".format(totalSpent)}\n")
+
+            if (totalLimit > 0.0) {
+                if (remainingBudget >= 0) {
+                    append("Leftover:     " + "£${"%.2f".format(remainingBudget)}\n")
+                } else {
+                    append("Overbudget:   " + "£${"%.2f".format(-remainingBudget)}\n")
+                }
+            }
+
+            budgets.forEach { budget ->
+                val matchedCategory = categories.find { it.cat_id == budget.cat_id }
+                val catName = matchedCategory?.cat_name ?: "General"
+
+                append("${catName}: ${budget.budget_name}\n")
+                append(
+                    "      £${"%.2f".format(spendingMap[budget.cat_id] ?: 0.0)} / £${"%.2f".format(budget.limit)}\n")
+            }
+        }
+    }
+
+    val shareIntent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, text.toString())
+        type = "text/plain"
+    }
+
+    val chooserIntent = Intent.createChooser(shareIntent, "Share Budget Summary")
+    if (chooserIntent.resolveActivity(context.packageManager) != null) {
+        context.startActivity(chooserIntent)
+    }
+
+}
 
 
