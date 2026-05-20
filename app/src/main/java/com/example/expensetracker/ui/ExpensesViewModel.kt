@@ -24,6 +24,10 @@ import java.time.YearMonth
 
 class ExpensesViewModel(application: Application) : AndroidViewModel(application) {
 
+    var deviceOnline by mutableStateOf(true)
+
+    var showOfflineAlert by mutableStateOf(false)
+
     private val expensesRepository: ExpensesRepository
     private val preferenceManager = ExpensePreferenceManager(application)
 
@@ -117,6 +121,16 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
         .build()
         .create(PlaidApiHandler::class.java)
 
+    fun updateNetworkStatus(online: Boolean) {
+        if (deviceOnline && !online) {
+            showOfflineAlert = true
+        }
+        deviceOnline = online
+
+        if (online) {
+            checkAndSync()
+        }
+    }
 
     fun exchangePublicToken(publicToken: String) {
         viewModelScope.launch {
@@ -163,6 +177,11 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun checkAndSync() {
+
+        if (!deviceOnline) {
+            return
+        }
+
         viewModelScope.launch {
             val lastSync = preferenceManager.lastSyncTime.first()
             val currentTime = System.currentTimeMillis()

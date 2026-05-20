@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -165,7 +166,7 @@ fun ExpensesScreen(
                         Row(
                             modifier = Modifier
                                 .clickable { monthMenuExpanded = true }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(Icons.Default.DateRange, contentDescription = "Select Month")
@@ -200,8 +201,8 @@ fun ExpensesScreen(
                     onClick = {
                         selectedBudget = null
                         showAddBudgetDialog = true },
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    contentColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    contentColor = MaterialTheme.colorScheme.surfaceBright
                     ) {
                     Icon(
                         Icons.Default.Add,
@@ -214,7 +215,7 @@ fun ExpensesScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(8.dp),
+                .padding(4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -296,55 +297,69 @@ fun CategoryList(
     categories: List<Category>,
     spendingMap: Map<Int, Double>,
     budgets: List<Budget> = emptyList(),
-    categoryColourMap: Map<Int, Color> = emptyMap(),
+    modifier: Modifier = Modifier,
     onItemClick: (Category) -> Unit = {}
 ) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+        ) {
+            Text(text = "Categories")
+        }
 
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .padding(vertical = 4.dp)) {
-        Text(text = "Categories")
-    }
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            items(count = categories.size) { index ->
+                val category = categories[index]
 
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(count = categories.size) {index ->
-            val category = categories[index]
+                val totalSpent = spendingMap[category.cat_id] ?: 0.0
 
-            val totalSpent = spendingMap[category.cat_id] ?: 0.0
+                val borderColour = colours[index % colours.size]
 
-            val borderColour = colours[index % categories.size]
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                border = if (mode == 1 && borderColour != Color.Transparent) BorderStroke(2.dp, borderColour) else null,
-                onClick = { onItemClick(category) }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = if (mode == 1 && borderColour != Color.Transparent) BorderStroke(
+                        2.dp,
+                        borderColour
+                    ) else null,
+                    onClick = { onItemClick(category) }
                 ) {
-                    Text(text = category.cat_name)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = category.cat_name)
 
-                    if (mode == 0) {
-                        Text(text = "£${"%.2f".format(totalSpent)}", fontWeight = FontWeight.Bold)
-                    } else if (mode == 1) {
+                        if (mode == 0) {
+                            Text(
+                                text = "£${"%.2f".format(totalSpent)}",
+                                fontWeight = FontWeight.Bold
+                            )
+                        } else if (mode == 1) {
 
-                        val budget = budgets.find { it.cat_id == category.cat_id }
-                        val limit = budget?.limit ?: 0.0
-                        Text(text = "£${"%.2f".format(totalSpent)}"+ " / £${"%.2f".format(limit)}", fontWeight = FontWeight.Bold)
+                            val budget = budgets.find { it.cat_id == category.cat_id }
+                            val limit = budget?.limit ?: 0.0
+                            Text(
+                                text = "£${"%.2f".format(totalSpent)}" + " / £${"%.2f".format(limit)}",
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
+
             }
 
         }
-
     }
 }
 
@@ -358,8 +373,19 @@ fun SpendingView(
     transactions: List<Transaction>
 ) {
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally) {
+
         //chart for spending over month here
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp)
+        ) {
+            //Line chart here?
+        }
 
 
         val spentCategories = remember(categories, spendingMap) {
@@ -368,7 +394,13 @@ fun SpendingView(
             }.sortedByDescending { spendingMap[it.cat_id] ?: 0.0}
         }
 
-        CategoryList(0, spentCategories, spendingMap, budgets = emptyList())
+        CategoryList(
+            mode = 0,
+            categories = spentCategories,
+            spendingMap = spendingMap,
+            budgets = emptyList(),
+            modifier = Modifier.weight(1f)
+        )
 
     }
 
@@ -390,24 +422,19 @@ fun BudgetView(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally) {
 
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                .padding(4.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                BudgetPieChart(
-                    budgets = budgets,
-                    spendingMap = spendingMap
-                )
-            }
+            BudgetPieChart(
+                budgets = budgets,
+                spendingMap = spendingMap
+            )
+
         }
+
 
         val budgetedCategories = remember(categories, budgets) {
             categories.filter { cat ->
@@ -415,22 +442,19 @@ fun BudgetView(
             }
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
 
-            CategoryList(
-                mode = 1,
-                categories = budgetedCategories,
-                spendingMap = spendingMap,
-                budgets = budgets,
-                onItemClick = { clickedCategory ->
-                    val associatedBudget = budgets.find { it.cat_id == clickedCategory.cat_id }
-                    if (associatedBudget != null) onBudgetClick(associatedBudget)
-                })
-        }
+        CategoryList(
+            mode = 1,
+            categories = budgetedCategories,
+            spendingMap = spendingMap,
+            budgets = budgets,
+            modifier = Modifier.weight(1f),
+            onItemClick = { clickedCategory ->
+                val associatedBudget = budgets.find { it.cat_id == clickedCategory.cat_id }
+                if (associatedBudget != null) onBudgetClick(associatedBudget)
+            }
+        )
+
     }
 
 }
@@ -606,9 +630,13 @@ fun BudgetPieChart(
     spendingMap: Map<Int, Double>,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier.wrapContentSize(),
-        contentAlignment = Alignment.Center
+    Column(
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(4.dp)
+        ,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        //contentAlignment = Alignment.Center
     ) {
 
         if (budgets.isEmpty()) return
@@ -621,7 +649,7 @@ fun BudgetPieChart(
 
         var startAngle = -90f
 
-        Canvas(modifier = modifier.size(280.dp)) {
+        Canvas(modifier = modifier.size(230.dp)) {
 
             val centerPoint = Offset(size.width / 2, size.height / 2)
 
@@ -634,7 +662,7 @@ fun BudgetPieChart(
                 val spendRatio = if (budget.limit > 0) (spend / budget.limit).toFloat() else 0f
 
                 val radiusFactor = if (spendRatio > 1.0f) { //Slower radius gain for over budgeted view, capped at 1.2 to prevent other categories from downscaling
-                    (1.0f + (spendRatio - 1.0f) * 0.15f).coerceAtMost(1.2f)
+                    (1.0f + (spendRatio - 1.0f) * 0.5f).coerceAtMost(1.2f)
                 } else {
                     spendRatio
                 }
@@ -688,7 +716,30 @@ fun BudgetPieChart(
 
         }
 
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            val totalSpent = remember(spendingMap) { spendingMap.values.sum() }
+            val totalLimit = remember(budgets) { budgets.sumOf { it.limit } }
+            Text(
+                text = "Total Spent",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "£${"%.2f".format(totalSpent)}" + " / £${"%.2f".format(totalLimit)}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
     }
 
 
 }
+
+
+
+

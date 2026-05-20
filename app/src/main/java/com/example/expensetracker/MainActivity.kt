@@ -1,5 +1,6 @@
 package com.example.expensetracker
 
+import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -17,6 +18,7 @@ import com.plaid.link.Plaid
 class MainActivity: ComponentActivity() {
 
     private val viewModel: ExpensesViewModel by viewModels()
+
 
     private val linkAccountToPlaid = registerForActivityResult(FastOpenPlaidLink()) { result ->
         when (result) {
