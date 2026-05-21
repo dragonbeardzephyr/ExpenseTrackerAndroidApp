@@ -32,7 +32,7 @@ fun NetworkBroadcastReceiver(
             context,
             broadcast,
             intentFilter,
-            ContextCompat.RECEIVER_EXPORTED // Necessary for capturing platform system connectivity changes
+            ContextCompat.RECEIVER_EXPORTED
         )
 
         onDispose {
