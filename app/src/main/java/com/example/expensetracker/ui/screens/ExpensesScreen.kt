@@ -87,7 +87,7 @@ fun ExpensesScreen(
     viewModel: ExpensesViewModel = viewModel(),
     navController: NavHostController
 ) {
-    var selectedView by remember { mutableStateOf(1) }
+    var selectedView by remember { mutableStateOf(0) }// 0 for spending, 1 for budget
 
     var showAddBudgetDialog by remember { mutableStateOf(false) }
 

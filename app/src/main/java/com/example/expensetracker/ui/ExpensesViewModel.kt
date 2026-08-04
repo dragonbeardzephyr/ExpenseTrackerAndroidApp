@@ -149,6 +149,8 @@ class ExpensesViewModel(application: Application) : AndroidViewModel(application
                 syncAccounts()
                 syncTransactions()
 
+                preferenceManager.saveSyncTime(System.currentTimeMillis())
+
             } catch (e: Exception) {
                 Log.e("PlaidError", "Exchange failed", e)
             }
