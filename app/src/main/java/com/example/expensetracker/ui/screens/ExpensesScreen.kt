@@ -167,7 +167,7 @@ fun ExpensesScreen(
         modifier = Modifier,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Spending/Budget") },
+                title = { Text(text = "Expenses") },
                 actions = {
                     Box() {
                         Row(

@@ -30,7 +30,7 @@ enum class Screens(
     Accounts("Accounts", Icons.Default.AccountBalance),
     Transactions("Transactions", Icons.AutoMirrored.Filled.ViewList),
     Splitter("Split", Icons.Default.Add),
-    Expenses("Budget", Icons.AutoMirrored.Filled.MultilineChart),
+    Expenses("Expenses", Icons.AutoMirrored.Filled.MultilineChart),
     Settings("Settings", Icons.Default.Settings)
 }
 
