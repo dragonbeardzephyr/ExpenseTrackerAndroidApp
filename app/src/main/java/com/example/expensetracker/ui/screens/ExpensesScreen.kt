@@ -125,7 +125,7 @@ fun ExpensesScreen(
     }
 
 
-    val spendingMap: Map<Int, Double> = remember(filteredTransactionsForMonth, allSplitTransactions) {
+    val spendingMap: Map<Int, Double> = remember(filteredTransactionsForMonth, allSplitTransactions, categories) {
         val calculatedMap = mutableMapOf<Int, Double>()
 
         filteredTransactionsForMonth.forEach { parentTransaction ->

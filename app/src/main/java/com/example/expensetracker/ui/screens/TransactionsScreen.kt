@@ -64,9 +64,9 @@ fun TransactionsScreen(
 
     var selectedAccountId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val allTransactions by viewModel.transactions.observeAsState(initial = emptyList())
-
     val allAccounts by viewModel.accounts.observeAsState(initial = emptyList())
+
+    val allTransactions by viewModel.transactions.observeAsState(initial = emptyList())
 
     val accountMap = remember(allAccounts) { allAccounts.associateBy { it.account_id } }
 
