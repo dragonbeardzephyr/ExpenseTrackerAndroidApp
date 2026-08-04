@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ReadMore
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -145,13 +146,33 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(text = "Accounts", style = MaterialTheme.typography.titleLarge)
-                IconButton(
-                    onClick = {
-                        navController.navigate(Screens.Accounts.name)
+
+
+                Row() {
+                    IconButton(
+                        onClick = {
+                            //Sync account data
+                        }
+                    ) {
+                        Icon(
+                            Icons.Filled.Autorenew,
+                            contentDescription = "Synchronise accounts"
+                        )
                     }
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Accounts")
+
+
+                    IconButton(
+                        onClick = {
+                            navController.navigate(Screens.Accounts.name)
+                        }
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Accounts"
+                        )
+                    }
                 }
+
             }
 
             Spacer(modifier = Modifier.height(8.dp))
